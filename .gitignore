@@ -1,0 +1,28 @@
+# Bitrix
+/bitrix/*
+/bitrix/cache/
+/bitrix/managed_cache/
+/bitrix/stack_cache/
+/bitrix/html_pages/
+/bitrix/backup/
+/bitrix/php_interface/dbconn.php
+/bitrix/php_interface/after_connect.php
+
+# Uploads
+/upload/
+/bitrix/upload/
+
+# Logs
+*.log
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# HTACCESS
+.htaccess
+.htaccess.restore
