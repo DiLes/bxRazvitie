@@ -1,0 +1,2 @@
+<?
+//pre($arParams);

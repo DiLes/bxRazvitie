@@ -1,0 +1,170 @@
+.announcement {
+    width: 100%;
+    height: 150px;
+    background: #1a1a1a;
+    position: relative;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    display: none;
+
+    &.active {
+        display: flex;
+    }
+
+    .bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        object-fit: cover;
+        z-index: 1;
+    }
+
+    .dog {
+        position: absolute;
+        bottom: -30px;
+        left: -25px;
+    }
+
+    .shadow {
+        width: 100%;
+        height: 50%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 100%);
+        z-index: 2;
+        pointer-events: none;
+    }
+
+    .content {
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 3;
+        display: flex;
+        padding: 15px 15px 15px 90px;
+        align-items: center;
+        gap: 12px;
+        border-radius: 15px;
+        background: #fff;
+        backdrop-filter: blur(10px);
+        height: 75px;
+
+        .col {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .day-num {
+            color: #056be9;
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 100%;
+        }
+
+        .day-text {
+            color: #1a1a1a;
+            font-size: 8px;
+            font-weight: 700;
+            line-height: 100%;
+            letter-spacing: 3.2px;
+        }
+
+        .time {
+            white-space: nowrap;
+            color: #1a1a1a;
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 115%;
+        }
+
+        .marketing-text {
+            color: #1a1a1a;
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 115%;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .discount {
+            color: #1a1a1a;
+            font-size: 10px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: 140%;
+        }
+
+        a {
+            white-space: nowrap;
+            display: flex;
+            padding: 15px;
+            justify-content: center;
+            align-items: center;
+            gap: 13.097px;
+            border-radius: 15px;
+            background: #f4f6f8;
+            color: #1a1a1a;
+            font-size: 12px;
+            font-weight: 700;
+            margin-left: 36px;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+
+            &:hover {
+                border-radius: 300px;
+                border: 1px solid #f4f6f8;
+                background-color: transparent;
+            }
+        }
+    }
+}
+
+@media (max-width: 1024px) {
+    .announcement {
+        height: 131px;
+
+        .bg {
+            height: 25%;
+        }
+
+        .dog {
+            left: 10px;
+            bottom: -35px;
+        }
+
+        .content {
+            left: 0;
+            top: 0;
+            transform: unset;
+            width: 100%;
+            border-radius: 0;
+            background: transparent;
+            backdrop-filter: unset;
+            justify-content: flex-end;
+
+            .col,
+            .day-num,
+            .day-text,
+            .discount {
+                display: none;
+            }
+
+            .marketing-text {
+                font-size: 12px;
+                color: #fff;
+            }
+
+            a {
+                margin: 0;
+                padding: 10px 15px;
+                background: #3f3f3f;
+                color: white;
+                border-radius: 8px;
+            }
+        }
+    }
+}

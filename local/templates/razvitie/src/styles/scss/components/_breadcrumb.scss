@@ -1,0 +1,25 @@
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 23px 46px 0 46px;
+    flex-wrap: wrap;
+
+    a {
+        color: #1a1a1a;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 120%;
+        white-space: nowrap;
+
+        &:last-child {
+            opacity: 0.6;
+        }
+    }
+}
+
+@media (max-width: 1024px) {
+    .breadcrumb {
+        padding: 0 15px;
+    }
+}

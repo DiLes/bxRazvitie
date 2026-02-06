@@ -1,0 +1,128 @@
+font.tablebodytext {
+    display: none;
+}
+.product-screen__right-side-top .product-bottom .pb-bottom {
+    display: ruby;
+    align-items: center;
+    gap: 10px;
+    margin-top: 22px;
+}
+.product-screen__right-side-top .product-bottom .pb-top {
+    padding-bottom: 20px;
+}
+.product-card__top .product-info span.product-card-hit {
+    color: #033b80;
+}
+.main-category__content-left form .submit-btn {
+    width: 100%;
+}
+.product-card__bottom .bottom-section .korzina-btn.success {
+    background-color: #17B744 !important;
+}
+.modal {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .3s ease, visibility .3s ease;
+}
+.modal.show {
+    opacity: 1;
+    visibility: visible;
+}
+.modal.closing {
+    opacity: 0;
+    visibility: hidden;
+}
+.order_cancel {
+    padding: 15px 0;
+}
+.order_qty_main_detail {
+    color: #8c8c8c;
+    font-family: Mont;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 115%;
+    padding-top: 50px;
+    display: flex;
+}
+.modal-btn {
+    border-radius: 40px;
+    border: 1px solid #dfe0e2;
+    color: #1A1A1A;
+    text-align: center;
+    font-family: Mont;
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+    padding: 13px 30px;
+    background-color: #cecece;
+    cursor: pointer;
+    margin: 5px 0;
+}
+.modal_z .modal-content .btn_primary {
+    margin-top: 35px;
+}
+.modal_z input[type=submit] {
+    width: 100%;
+    padding: 25px 45px;
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+    font-family: Mont;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+    transition: all
+    ease-in 0.3s;
+    background: #E8F1FA;
+    color: #8ca9c9;
+}
+.header .search-input.active {
+    width: 600px;
+}
+.header .search-input input.focused {
+    width: 600px;
+}
+.contacts  {
+    height: 390px !important;
+}
+.partners .swiper-slide {
+    max-height: 180px !important;
+}
+.buttons-section {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+.buttons-section .btn {
+    border: none;
+    outline: none;
+    white-space: nowrap;
+    cursor: pointer;
+    display: flex;
+    padding: 25px 45px;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    border-radius: 15px;
+    background: #056be9;
+    transition: background 0.3s ease;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+}
+.personal-photo-del {
+    background: none;
+    border: none;
+    color: #8c8c8c;
+    text-align: right;
+    font-family: Mont;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 120%;
+    cursor: pointer;
+    text-transform: uppercase;
+}
