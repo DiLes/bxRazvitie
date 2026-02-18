@@ -11,10 +11,7 @@ global $APPLICATION;
 if(empty($arResult))
 	return "";
 
-$strReturn = '';
-
-
-$strReturn .= '<div class="breadcrumb mob" itemscope itemtype="http://schema.org/BreadcrumbList">';
+$strReturn = '<div class="breadcrumb mob" itemscope itemtype="http://schema.org/BreadcrumbList">';
 
 $itemSize = count($arResult);
 for($index = 0; $index < $itemSize; $index++)

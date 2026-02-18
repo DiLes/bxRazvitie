@@ -11,10 +11,7 @@ global $APPLICATION;
 if(empty($arResult))
 	return "";
 
-$strReturn = '';
-
-
-$strReturn .= '<div class="breadcrumb desc" itemscope itemtype="http://schema.org/BreadcrumbList">';
+$strReturn = '<div class="breadcrumb desc" itemscope itemtype="http://schema.org/BreadcrumbList">';
 
 $itemSize = count($arResult);
 for($index = 0; $index < $itemSize; $index++)
@@ -43,3 +40,20 @@ for($index = 0; $index < $itemSize; $index++)
 $strReturn .= '</div>';
 
 return $strReturn;
+
+/*
+<div class="breadcrumb desc">
+    <a href="#">Главная</a>
+    <img src="/local/templates/razvitie/src/assets/svgicons/arrow-right.svg" alt="">
+    <a href="#">Школьные кабинеты</a>
+    <img src="/local/templates/razvitie/src/assets/svgicons/arrow-right.svg" alt="">
+    <a href="#">Кабинет Физкультуры</a>
+    <img src="/local/templates/razvitie/src/assets/svgicons/arrow-right.svg" alt="">
+    <a href="#">Спорт. оборудование</a>
+</div>
+
+
+
+
+
+ */
