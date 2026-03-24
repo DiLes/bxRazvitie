@@ -3,6 +3,7 @@ use Bitrix\Main\Page\Asset;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Loader;
 use Bitrix\Sale;
+use Bitrix\Sale\Basket;
 use Bitrix\Sale\Location;
 Loc::loadMessages(__FILE__);
 global $APPLICATION, $USER;
@@ -11,12 +12,9 @@ $curPage = $APPLICATION->GetCurPage(false);
 
 $basketCount = 0;
 if (Loader::includeModule("sale")) {
-    $basket = Sale\Basket::loadItemsForFUser(
-        Sale\Fuser::getId(), Bitrix\Main\Context::getCurrent()->getSite()
-    );
-    $basketCount = count($basket);
+    $basket = Sale\Basket::loadItemsForFUser(Sale\Fuser::getId(), Bitrix\Main\Context::getCurrent()->getSite());
+    $basketCount = $basket->count();
 }
-
 
 $res = Location\LocationTable::getList([
     'filter' => [
@@ -63,6 +61,84 @@ if (isset($_SESSION["CATALOG_COMPARE_LIST"][$IBLOCK_ID]["ITEMS"])){
     $compareCount = count($_SESSION["CATALOG_COMPARE_LIST"][$IBLOCK_ID]["ITEMS"]);
 }
 $minBasketSumm = \COption::GetOptionString( "askaron.settings", "UF_MIN_BASKET_SUMM");
+
+// === СКИДКА ОТ ИГРЫ (привязка к ИНН) ===
+$gameDiscount = 0;
+$gameLevel = 0;
+$gameINN = "";
+$gameCompany = "";
+
+// Функция получения скидки по ИНН
+function getGameDiscountByINNHeader($inn) {
+    if (empty($inn) || !Loader::includeModule("iblock")) return ["discount" => 0, "level" => 0, "company" => ""];
+
+    $inn = preg_replace('/\D/', '', $inn);
+    $GAME_DISCOUNT_IBLOCK_ID = 14; // ID инфоблока "Скидки от игры"
+
+    $res = CIBlockElement::GetList(
+        ["ID" => "DESC"],
+        [
+            "IBLOCK_ID" => $GAME_DISCOUNT_IBLOCK_ID,
+            "ACTIVE" => "Y",
+            "=PROPERTY_INN" => $inn
+        ],
+        false,
+        ["nTopCount" => 1],
+        ["ID", "NAME", "PROPERTY_DISCOUNT", "PROPERTY_LEVEL"]
+    );
+
+    if ($row = $res->GetNext()) {
+        return [
+            "discount" => (int)$row["PROPERTY_DISCOUNT_VALUE"],
+            "level" => (int)$row["PROPERTY_LEVEL_VALUE"],
+            "company" => $row["NAME"]
+        ];
+    }
+
+    return ["discount" => 0, "level" => 0, "company" => ""];
+}
+
+// 1. Проверяем сессию
+if (!empty($_SESSION["GAME_INN"])) {
+    $gameINN = $_SESSION["GAME_INN"];
+    $gameDiscount = (int)($_SESSION["GAME_DISCOUNT"] ?? 0);
+    $gameLevel = (int)($_SESSION["GAME_LEVEL"] ?? 0);
+    $gameCompany = $_SESSION["GAME_COMPANY"] ?? "";
+
+    // Проверяем актуальность в БД
+    $dbData = getGameDiscountByINNHeader($gameINN);
+    if ($dbData["discount"] > $gameDiscount) {
+        $gameDiscount = $dbData["discount"];
+        $gameLevel = $dbData["level"];
+        $_SESSION["GAME_DISCOUNT"] = $gameDiscount;
+        $_SESSION["GAME_LEVEL"] = $gameLevel;
+    }
+}
+// 2. Проверяем куки
+elseif (!empty($_COOKIE["GAME_INN"])) {
+    $gameINN = $_COOKIE["GAME_INN"];
+    $dbData = getGameDiscountByINNHeader($gameINN);
+    $gameDiscount = $dbData["discount"];
+    $gameLevel = $dbData["level"];
+    $gameCompany = $dbData["company"];
+
+    // Синхронизируем с сессией
+    if ($gameDiscount > 0) {
+        $_SESSION["GAME_DISCOUNT"] = $gameDiscount;
+        $_SESSION["GAME_LEVEL"] = $gameLevel;
+        $_SESSION["GAME_INN"] = $gameINN;
+        $_SESSION["GAME_COMPANY"] = $gameCompany;
+    }
+}
+
+// Валидация (только 5, 10, 15)
+if (!in_array($gameDiscount, [5, 10, 15])) {
+    $gameDiscount = 0;
+    $gameLevel = 0;
+}
+
+//pre($_SESSION);
+//echo '<pre>'; print_r($_SESSION); echo '</pre>';
 ?>
 
 <!DOCTYPE html>
@@ -93,6 +169,7 @@ $minBasketSumm = \COption::GetOptionString( "askaron.settings", "UF_MIN_BASKET_S
     Asset::getInstance()->addJs(SITE_TEMPLATE_PATH . "/js/compare.js");
     Asset::getInstance()->addJs(SITE_TEMPLATE_PATH . "/js/favorites.js");
     Asset::getInstance()->addJs(SITE_TEMPLATE_PATH . "/js/auth.js");
+    Asset::getInstance()->addJs(SITE_TEMPLATE_PATH . "/js/game_discount.js");
 
     Asset::getInstance()->addJs(SITE_TEMPLATE_PATH . "/js/main.js");
 
@@ -106,8 +183,62 @@ $minBasketSumm = \COption::GetOptionString( "askaron.settings", "UF_MIN_BASKET_S
 <script>
     var minOrder = <?= (int)$minBasketSumm ?>;
     window.serverFavorites = <?= json_encode(array_map('intval', $favs)) ?>;
+
+    // Скидка от игры (привязана к ИНН)
+    window.gameDiscount = <?= (int)$gameDiscount ?>;
+    window.gameLevel = <?= (int)$gameLevel ?>;
+    window.gameINN = "<?= htmlspecialchars($gameINN) ?>";
+    window.gameCompany = "<?= htmlspecialchars($gameCompany) ?>";
 </script>
+<?php if ($gameDiscount > 0): ?>
+<style>
+    .game-discount-badge {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+        color: #fff;
+        padding: 12px 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+        z-index: 9999;
+        font-size: 14px;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .game-discount-badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
+    }
+    .game-discount-badge .discount-value {
+        font-size: 24px;
+        font-weight: bold;
+        display: block;
+    }
+    .game-discount-badge .discount-label {
+        opacity: 0.9;
+        font-size: 12px;
+    }
+    .game-discount-badge .discount-inn {
+        opacity: 0.7;
+        font-size: 10px;
+        display: block;
+        margin-top: 2px;
+    }
+</style>
+<?php endif; ?>
 <div id="panel"><? $APPLICATION->ShowPanel(); ?></div>
+
+<?php if ($gameDiscount > 0): ?>
+<!-- Плавающий бейдж со скидкой от игры (привязана к ИНН) -->
+<div class="game-discount-badge" onclick="GameDiscountModule.showCheckINNForm();" title="Скидка от игры. Нажмите для проверки по ИНН">
+    <span class="discount-label">Ваша скидка</span>
+    <span class="discount-value">-<?= $gameDiscount ?>%</span>
+    <?php if ($gameINN): ?>
+    <span class="discount-inn">ИНН: <?= htmlspecialchars($gameINN) ?></span>
+    <?php endif; ?>
+</div>
+<?php endif; ?>
 
 <?$APPLICATION->IncludeComponent(
     "bitrix:menu",
@@ -438,7 +569,7 @@ $minBasketSumm = \COption::GetOptionString( "askaron.settings", "UF_MIN_BASKET_S
                             <a href="/personal/orders/?filter_history=Y">История заказов</a>
                             <a href="/personal/private/">Данные аккаунта</a>
                             <hr />
-                            <a href="?logout=yes&<?=bitrix_sessid_get()?>">Выйти из аккаунта</a>
+                            <a href="#" class="logout_btn" data-logout-url="?logout=yes&<?=bitrix_sessid_get()?>">Выйти из аккаунта</a>
                         </div>
                     </div>
                 </div>
@@ -461,24 +592,26 @@ $minBasketSumm = \COption::GetOptionString( "askaron.settings", "UF_MIN_BASKET_S
                 <span>Каталог</span>
             </button>
             <?$APPLICATION->IncludeComponent(
-                "bitrix:search.title",
-                "",
-                [
-                    "CATEGORY_0" => "",
-                    "CATEGORY_0_TITLE" => "",
-                    "CHECK_DATES" => "N",
-                    "CONTAINER_ID" => "title-search",
-                    "INPUT_ID" => "title-search-input",
-                    "NUM_CATEGORIES" => "1",
-                    "ORDER" => "date",
-                    "PAGE" => "#SITE_DIR#search/index.php",
-                    "SHOW_INPUT" => "Y",
-                    "SHOW_OTHERS" => "N",
-                    "TOP_COUNT" => "5",
-                    "USE_LANGUAGE_GUESS" => "Y"
-                ],
-                false
-            );?>
+	"bitrix:search.title", 
+	"search", 
+	[
+		"CATEGORY_0" => [
+		],
+		"CATEGORY_0_TITLE" => "",
+		"CHECK_DATES" => "N",
+		"CONTAINER_ID" => "title-search",
+		"INPUT_ID" => "title-search-input",
+		"NUM_CATEGORIES" => "1",
+		"ORDER" => "date",
+		"PAGE" => "#SITE_DIR#search/index.php",
+		"SHOW_INPUT" => "Y",
+		"SHOW_OTHERS" => "N",
+		"TOP_COUNT" => "5",
+		"USE_LANGUAGE_GUESS" => "Y",
+		"COMPONENT_TEMPLATE" => "search"
+	],
+	false
+);?>
         </div>
         <div class="header__actions">
             <?/*$APPLICATION->IncludeComponent(
@@ -599,222 +732,21 @@ $minBasketSumm = \COption::GetOptionString( "askaron.settings", "UF_MIN_BASKET_S
                 </svg>
             </a>
             <div class="search_mobile_form_box">
-                <form action="" class="search-form mobile">
+                <form action="/search/" class="search-form mobile" method="get">
                     <div class="search-form__overlay"></div>
                     <div class="search-input">
                         <div class="search-input__icon">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="17"
-                                height="18"
-                                viewBox="0 0 17 18"
-                                fill="none"
-                            >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="18" viewBox="0 0 17 18" fill="none">
                                 <g opacity="0.3">
-                                    <path
-                                        d="M13.8494 12.8724C13.5128 12.5358 12.9669 12.5358 12.6303 12.8724C12.2936 13.2091 12.2936 13.7549 12.6303 14.0916L13.8494 12.8724ZM15.3888 16.8501C15.7255 17.1868 16.2713 17.1868 16.608 16.8501C16.9446 16.5135 16.9446 15.9677 16.608 15.631L15.3888 16.8501ZM12.6303 14.0916L15.3888 16.8501L16.608 15.631L13.8494 12.8724L12.6303 14.0916ZM7.72253 13.3095C4.77066 13.3095 2.37769 10.9166 2.37769 7.9647H0.653556C0.653556 11.8688 3.81845 15.0337 7.72253 15.0337V13.3095ZM13.0674 7.9647C13.0674 10.9166 10.6744 13.3095 7.72253 13.3095V15.0337C11.6266 15.0337 14.7915 11.8688 14.7915 7.9647H13.0674ZM7.72253 2.61988C10.6744 2.61988 13.0674 5.01284 13.0674 7.9647H14.7915C14.7915 4.06062 11.6266 0.895743 7.72253 0.895743V2.61988ZM7.72253 0.895743C3.81845 0.895743 0.653556 4.06062 0.653556 7.9647H2.37769C2.37769 5.01284 4.77066 2.61988 7.72253 2.61988V0.895743Z"
-                                        fill="#1A1A1A"
-                                    />
+                                    <path d="M13.8494 12.8724C13.5128 12.5358 12.9669 12.5358 12.6303 12.8724C12.2936 13.2091 12.2936 13.7549 12.6303 14.0916L13.8494 12.8724ZM15.3888 16.8501C15.7255 17.1868 16.2713 17.1868 16.608 16.8501C16.9446 16.5135 16.9446 15.9677 16.608 15.631L15.3888 16.8501ZM12.6303 14.0916L15.3888 16.8501L16.608 15.631L13.8494 12.8724L12.6303 14.0916ZM7.72253 13.3095C4.77066 13.3095 2.37769 10.9166 2.37769 7.9647H0.653556C0.653556 11.8688 3.81845 15.0337 7.72253 15.0337V13.3095ZM13.0674 7.9647C13.0674 10.9166 10.6744 13.3095 7.72253 13.3095V15.0337C11.6266 15.0337 14.7915 11.8688 14.7915 7.9647H13.0674ZM7.72253 2.61988C10.6744 2.61988 13.0674 5.01284 13.0674 7.9647H14.7915C14.7915 4.06062 11.6266 0.895743 7.72253 0.895743V2.61988ZM7.72253 0.895743C3.81845 0.895743 0.653556 4.06062 0.653556 7.9647H2.37769C2.37769 5.01284 4.77066 2.61988 7.72253 2.61988V0.895743Z" fill="#1A1A1A"/>
                                 </g>
                             </svg>
                         </div>
-                        <input type="text" placeholder="Поиск по сайту" />
+                        <input type="text" name="q" placeholder="Поиск по сайту" autocomplete="off"/>
                         <div class="search-input__clear">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="13"
-                                height="13"
-                                viewBox="0 0 13 13"
-                                fill="none"
-                            >
-                                <path
-                                    d="M0.958984 0.958987L12.0423 12.0423M0.959006 12.0423L6.50067 6.50065L12.0423 0.958984"
-                                    stroke="#1A1A1A"
-                                    stroke-width="1.6"
-                                    stroke-linecap="round"
-                                />
+                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 13 13" fill="none">
+                                <path d="M0.958984 0.958987L12.0423 12.0423M0.959006 12.0423L6.50067 6.50065L12.0423 0.958984" stroke="#1A1A1A" stroke-width="1.6" stroke-linecap="round"/>
                             </svg>
-                        </div>
-                    </div>
-                    <div class="search-result">
-                        <div class="search-result__top">
-                            <a href="#">
-                                        <span>
-                                            Школьные кабинеты
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                width="6"
-                                                height="6"
-                                                viewBox="0 0 6 6"
-                                                fill="none"
-                                            >
-                                                <path
-                                                    d="M2.25 4.5L3.75 3L2.25 1.5"
-                                                    stroke="#9AB1CC"
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                />
-                                            </svg>
-                                        </span>
-                                <h3>Кабинет Химии</h3>
-                            </a>
-                            <a href="#">
-                                        <span>
-                                            Школьные кабинеты
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                width="6"
-                                                height="6"
-                                                viewBox="0 0 6 6"
-                                                fill="none"
-                                            >
-                                                <path
-                                                    d="M2.25 4.5L3.75 3L2.25 1.5"
-                                                    stroke="#9AB1CC"
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                />
-                                            </svg>
-                                            Кабинет Химии
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                width="6"
-                                                height="6"
-                                                viewBox="0 0 6 6"
-                                                fill="none"
-                                            >
-                                                <path
-                                                    d="M2.25 4.5L3.75 3L2.25 1.5"
-                                                    stroke="#9AB1CC"
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                />
-                                            </svg>
-                                        </span>
-                                <h3>Химическое оборудование</h3>
-                            </a>
-                        </div>
-                        <hr />
-                        <div class="search-result__bottom">
-                            <a href="#">
-                                <div class="row">
-                                    <div class="image-wrapper">
-                                        <img src="<?=SITE_TEMPLATE_PATH?>/src/assets/images/search-img.png" alt="" />
-                                    </div>
-                                    <div class="col">
-                                        <h3>Шкаф лабораторный химический ШЛ-4, 800х400х1900 мм</h3>
-                                        <span>
-                                                    Школьные кабинеты
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        width="6"
-                                                        height="6"
-                                                        viewBox="0 0 6 6"
-                                                        fill="none"
-                                                    >
-                                                        <path
-                                                            d="M2.25 4.5L3.75 3L2.25 1.5"
-                                                            stroke="#9AB1CC"
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                        />
-                                                    </svg>
-                                                </span>
-                                    </div>
-                                </div>
-
-                                <span class="price">23 460 ₽</span>
-                            </a>
-                            <a href="#">
-                                <div class="row">
-                                    <div class="image-wrapper">
-                                        <img src="<?=SITE_TEMPLATE_PATH?>/src/assets/images/search-img.png" alt="" />
-                                    </div>
-                                    <div class="col">
-                                        <h3>Электронная таблица Периодическая система химических элеме...</h3>
-                                        <span>
-                                                    Кабинет Химии
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        width="6"
-                                                        height="6"
-                                                        viewBox="0 0 6 6"
-                                                        fill="none"
-                                                    >
-                                                        <path
-                                                            d="M2.25 4.5L3.75 3L2.25 1.5"
-                                                            stroke="#9AB1CC"
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                        />
-                                                    </svg>
-                                                    Стенды и плакаты
-                                                </span>
-                                    </div>
-                                </div>
-
-                                <span class="price">143 025 ₽</span>
-                            </a>
-                            <a href="#">
-                                <div class="row">
-                                    <div class="image-wrapper">
-                                        <img src="<?=SITE_TEMPLATE_PATH?>/src/assets/images/search-img.png" alt="" />
-                                    </div>
-                                    <div class="col">
-                                        <h3>Набор ОГЭ по химии Точка роста</h3>
-                                        <span>
-                                                    Кабинет Химии
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        width="6"
-                                                        height="6"
-                                                        viewBox="0 0 6 6"
-                                                        fill="none"
-                                                    >
-                                                        <path
-                                                            d="M2.25 4.5L3.75 3L2.25 1.5"
-                                                            stroke="#9AB1CC"
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                        />
-                                                    </svg>
-                                                    Учебники
-                                                </span>
-                                    </div>
-                                </div>
-
-                                <span class="price">42 690 ₽</span>
-                            </a>
-                            <a href="#">
-                                <div class="row">
-                                    <div class="image-wrapper">
-                                        <img src="<?=SITE_TEMPLATE_PATH?>/src/assets/images/search-img.png" alt="" />
-                                    </div>
-                                    <div class="col">
-                                        <h3>Лабораторный комплекс для учебной деятельности по химии (ЛКХ)</h3>
-                                        <span>
-                                                    Школьные кабинеты
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        width="6"
-                                                        height="6"
-                                                        viewBox="0 0 6 6"
-                                                        fill="none"
-                                                    >
-                                                        <path
-                                                            d="M2.25 4.5L3.75 3L2.25 1.5"
-                                                            stroke="#9AB1CC"
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                        />
-                                                    </svg>
-                                                    Мебель
-                                                </span>
-                                    </div>
-                                </div>
-
-                                <span class="price">442 935 ₽</span>
-                            </a>
                         </div>
                     </div>
                 </form>
@@ -853,222 +785,21 @@ $minBasketSumm = \COption::GetOptionString( "askaron.settings", "UF_MIN_BASKET_S
                 />
             </svg>
         </a>
-        <form action="" class="search-form search-form--scroll">
+        <form action="/search/" class="search-form search-form--scroll" method="get">
             <div class="search-form__overlay"></div>
             <div class="search-input">
                 <div class="search-input__icon">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="17"
-                        height="18"
-                        viewBox="0 0 17 18"
-                        fill="none"
-                    >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="17" height="18" viewBox="0 0 17 18" fill="none">
                         <g opacity="0.3">
-                            <path
-                                d="M13.8494 12.8724C13.5128 12.5358 12.9669 12.5358 12.6303 12.8724C12.2936 13.2091 12.2936 13.7549 12.6303 14.0916L13.8494 12.8724ZM15.3888 16.8501C15.7255 17.1868 16.2713 17.1868 16.608 16.8501C16.9446 16.5135 16.9446 15.9677 16.608 15.631L15.3888 16.8501ZM12.6303 14.0916L15.3888 16.8501L16.608 15.631L13.8494 12.8724L12.6303 14.0916ZM7.72253 13.3095C4.77066 13.3095 2.37769 10.9166 2.37769 7.9647H0.653556C0.653556 11.8688 3.81845 15.0337 7.72253 15.0337V13.3095ZM13.0674 7.9647C13.0674 10.9166 10.6744 13.3095 7.72253 13.3095V15.0337C11.6266 15.0337 14.7915 11.8688 14.7915 7.9647H13.0674ZM7.72253 2.61988C10.6744 2.61988 13.0674 5.01284 13.0674 7.9647H14.7915C14.7915 4.06062 11.6266 0.895743 7.72253 0.895743V2.61988ZM7.72253 0.895743C3.81845 0.895743 0.653556 4.06062 0.653556 7.9647H2.37769C2.37769 5.01284 4.77066 2.61988 7.72253 2.61988V0.895743Z"
-                                fill="#1A1A1A"
-                            />
+                            <path d="M13.8494 12.8724C13.5128 12.5358 12.9669 12.5358 12.6303 12.8724C12.2936 13.2091 12.2936 13.7549 12.6303 14.0916L13.8494 12.8724ZM15.3888 16.8501C15.7255 17.1868 16.2713 17.1868 16.608 16.8501C16.9446 16.5135 16.9446 15.9677 16.608 15.631L15.3888 16.8501ZM12.6303 14.0916L15.3888 16.8501L16.608 15.631L13.8494 12.8724L12.6303 14.0916ZM7.72253 13.3095C4.77066 13.3095 2.37769 10.9166 2.37769 7.9647H0.653556C0.653556 11.8688 3.81845 15.0337 7.72253 15.0337V13.3095ZM13.0674 7.9647C13.0674 10.9166 10.6744 13.3095 7.72253 13.3095V15.0337C11.6266 15.0337 14.7915 11.8688 14.7915 7.9647H13.0674ZM7.72253 2.61988C10.6744 2.61988 13.0674 5.01284 13.0674 7.9647H14.7915C14.7915 4.06062 11.6266 0.895743 7.72253 0.895743V2.61988ZM7.72253 0.895743C3.81845 0.895743 0.653556 4.06062 0.653556 7.9647H2.37769C2.37769 5.01284 4.77066 2.61988 7.72253 2.61988V0.895743Z" fill="#1A1A1A"/>
                         </g>
                     </svg>
                 </div>
-                <input type="text" placeholder="Поиск по сайту" />
+                <input type="text" name="q" placeholder="Поиск по сайту" autocomplete="off"/>
                 <div class="search-input__clear">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="13"
-                        height="13"
-                        viewBox="0 0 13 13"
-                        fill="none"
-                    >
-                        <path
-                            d="M0.958984 0.958987L12.0423 12.0423M0.959006 12.0423L6.50067 6.50065L12.0423 0.958984"
-                            stroke="#1A1A1A"
-                            stroke-width="1.6"
-                            stroke-linecap="round"
-                        />
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 13 13" fill="none">
+                        <path d="M0.958984 0.958987L12.0423 12.0423M0.959006 12.0423L6.50067 6.50065L12.0423 0.958984" stroke="#1A1A1A" stroke-width="1.6" stroke-linecap="round"/>
                     </svg>
-                </div>
-            </div>
-            <div class="search-result">
-                <div class="search-result__top">
-                    <a href="#">
-                                <span>
-                                    Школьные кабинеты
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="6"
-                                        height="6"
-                                        viewBox="0 0 6 6"
-                                        fill="none"
-                                    >
-                                        <path
-                                            d="M2.25 4.5L3.75 3L2.25 1.5"
-                                            stroke="#9AB1CC"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                        />
-                                    </svg>
-                                </span>
-                        <h3>Кабинет Химии</h3>
-                    </a>
-                    <a href="#">
-                                <span>
-                                    Школьные кабинеты
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="6"
-                                        height="6"
-                                        viewBox="0 0 6 6"
-                                        fill="none"
-                                    >
-                                        <path
-                                            d="M2.25 4.5L3.75 3L2.25 1.5"
-                                            stroke="#9AB1CC"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                        />
-                                    </svg>
-                                    Кабинет Химии
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="6"
-                                        height="6"
-                                        viewBox="0 0 6 6"
-                                        fill="none"
-                                    >
-                                        <path
-                                            d="M2.25 4.5L3.75 3L2.25 1.5"
-                                            stroke="#9AB1CC"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                        />
-                                    </svg>
-                                </span>
-                        <h3>Химическое оборудование</h3>
-                    </a>
-                </div>
-                <hr />
-                <div class="search-result__bottom">
-                    <a href="#">
-                        <div class="row">
-                            <div class="image-wrapper">
-                                <img src="<?=SITE_TEMPLATE_PATH?>/src/assets/images/search-img.png" alt="" />
-                            </div>
-                            <div class="col">
-                                <h3>Шкаф лабораторный химический ШЛ-4, 800х400х1900 мм</h3>
-                                <span>
-                                            Школьные кабинеты
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                width="6"
-                                                height="6"
-                                                viewBox="0 0 6 6"
-                                                fill="none"
-                                            >
-                                                <path
-                                                    d="M2.25 4.5L3.75 3L2.25 1.5"
-                                                    stroke="#9AB1CC"
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                />
-                                            </svg>
-                                        </span>
-                            </div>
-                        </div>
-
-                        <span class="price">23 460 ₽</span>
-                    </a>
-                    <a href="#">
-                        <div class="row">
-                            <div class="image-wrapper">
-                                <img src="<?=SITE_TEMPLATE_PATH?>/src/assets/images/search-img.png" alt="" />
-                            </div>
-                            <div class="col">
-                                <h3>Электронная таблица Периодическая система химических элеме...</h3>
-                                <span>
-                                            Кабинет Химии
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                width="6"
-                                                height="6"
-                                                viewBox="0 0 6 6"
-                                                fill="none"
-                                            >
-                                                <path
-                                                    d="M2.25 4.5L3.75 3L2.25 1.5"
-                                                    stroke="#9AB1CC"
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                />
-                                            </svg>
-                                            Стенды и плакаты
-                                        </span>
-                            </div>
-                        </div>
-
-                        <span class="price">143 025 ₽</span>
-                    </a>
-                    <a href="#">
-                        <div class="row">
-                            <div class="image-wrapper">
-                                <img src="<?=SITE_TEMPLATE_PATH?>/src/assets/images/search-img.png" alt="" />
-                            </div>
-                            <div class="col">
-                                <h3>Набор ОГЭ по химии Точка роста</h3>
-                                <span>
-                                            Кабинет Химии
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                width="6"
-                                                height="6"
-                                                viewBox="0 0 6 6"
-                                                fill="none"
-                                            >
-                                                <path
-                                                    d="M2.25 4.5L3.75 3L2.25 1.5"
-                                                    stroke="#9AB1CC"
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                />
-                                            </svg>
-                                            Учебники
-                                        </span>
-                            </div>
-                        </div>
-
-                        <span class="price">42 690 ₽</span>
-                    </a>
-                    <a href="#">
-                        <div class="row">
-                            <div class="image-wrapper">
-                                <img src="<?=SITE_TEMPLATE_PATH?>/src/assets/images/search-img.png" alt="" />
-                            </div>
-                            <div class="col">
-                                <h3>Лабораторный комплекс для учебной деятельности по химии (ЛКХ)</h3>
-                                <span>
-                                            Школьные кабинеты
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                width="6"
-                                                height="6"
-                                                viewBox="0 0 6 6"
-                                                fill="none"
-                                            >
-                                                <path
-                                                    d="M2.25 4.5L3.75 3L2.25 1.5"
-                                                    stroke="#9AB1CC"
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                />
-                                            </svg>
-                                            Мебель
-                                        </span>
-                            </div>
-                        </div>
-
-                        <span class="price">442 935 ₽</span>
-                    </a>
                 </div>
             </div>
         </form>

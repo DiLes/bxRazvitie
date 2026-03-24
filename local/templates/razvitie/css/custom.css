@@ -13,6 +13,9 @@ font.tablebodytext {
 .product-card__top .product-info span.product-card-hit {
     color: #033b80;
 }
+.product-info span.product-card-hit {
+    color: #033b80 !important;
+}
 .main-category__content-left form .submit-btn {
     width: 100%;
 }
@@ -125,4 +128,115 @@ font.tablebodytext {
     line-height: 120%;
     cursor: pointer;
     text-transform: uppercase;
+}
+
+/* Thanks Order Page */
+.thanks_order_section {
+    padding: 80px 0;
+}
+.thanks_order_section .container.white {
+    background: #fff;
+    border-radius: 20px;
+    padding: 60px 40px;
+}
+.thanks_order_content {
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+}
+.thanks_order_icon {
+    margin-bottom: 30px;
+}
+.thanks_order_title {
+    font-family: Mont;
+    font-size: 32px;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin-bottom: 20px;
+}
+.thanks_order_text {
+    font-family: Mont;
+    font-size: 16px;
+    color: #8c8c8c;
+    line-height: 1.6;
+    margin-bottom: 40px;
+}
+.thanks_order_text strong {
+    color: #056be9;
+}
+.thanks_order_actions {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.thanks_order_actions .btn_z_outline {
+    background: transparent;
+    border: 2px solid #056be9;
+    color: #056be9;
+}
+.thanks_order_actions .btn_z_outline:hover {
+    background: #056be9;
+    color: #fff;
+}
+@media (max-width: 768px) {
+    .thanks_order_section {
+        padding: 40px 0;
+    }
+    .thanks_order_section .container.white {
+        padding: 40px 20px;
+    }
+    .thanks_order_title {
+        font-size: 24px;
+    }
+    .thanks_order_actions {
+        flex-direction: column;
+    }
+    .thanks_order_actions .btn_z {
+        width: 100%;
+    }
+}
+
+/* Filter tags top bar */
+.main-category__filter-title.hide {
+    display: none;
+}
+.main-category__filter-list:empty + .main-category__filter-title {
+    display: none;
+}
+.main-category__filter-list .filter-tag {
+    flex-shrink: 0;
+    border-radius: 20px;
+    background: #f4f6f8;
+    display: flex;
+    padding: 8px 10px;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    color: #1a1a1a;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 120%;
+}
+.main-category__filter-list .filter-tag:hover {
+    background: #e9e9e9;
+}
+.main-category__filter-list .filter-tag svg {
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+}
+.main-category__filter-list .filter-tag:hover svg {
+    opacity: 1;
+}
+.main-category__filter-list .filter-tag.reset-all {
+    border-radius: 20px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    background: transparent;
+    opacity: 0.7;
+}
+.main-category__filter-list .filter-tag.reset-all:hover {
+    opacity: 1;
+    background: #f4f6f8;
 }

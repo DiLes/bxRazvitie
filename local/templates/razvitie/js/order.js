@@ -10,8 +10,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const siteIdInput = document.querySelector('[name="SITE_ID"]');
     const siteId = siteIdInput?.value || BX?.message?.("SITE_ID") || "s1";
 
-    console.log(deliveryOptions, 'deliveryOptions-13');
-    
     if (!deliveryOptions.length) {
         // console.warn("⚠️ Способы доставки не найдены");
         return;

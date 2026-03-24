@@ -38,10 +38,19 @@ if ($lastDeliveryId > 0) {
 
 <script type="text/javascript">
     function submitForm(val) {
-        BX('<? echo $arParams["ENABLE_VALIDATION_INPUT_ID"]; ?>').value = (val !== 'Y') ? "N" : "Y";
-        var orderForm = BX('<? echo $arParams["FORM_ID"]; ?>');
-        BX.submit(orderForm);
-        return true;
+        var validationInput = document.getElementById('<? echo $arParams["ENABLE_VALIDATION_INPUT_ID"]; ?>');
+        var orderForm = document.getElementById('<? echo $arParams["FORM_ID"]; ?>');
+
+        if (validationInput) {
+            validationInput.value = (val !== 'Y') ? "N" : "Y";
+        }
+
+        if (orderForm) {
+            orderForm.submit();
+        } else {
+            console.error('Order form not found');
+        }
+        return false;
     }
 </script>
 
@@ -58,15 +67,19 @@ if ($lastDeliveryId > 0) {
     </div>-->
     <div class="container white">
         <form class="checkout-container"
-              id="checkout-form"
+              id="<?= $arParams["FORM_ID"] ?>"
               name="<? echo $arParams["FORM_NAME"]; ?>"
-              action="<? echo $arParams["FORM_ACTION"]; ?>">
+              action="<? echo $arParams["FORM_ACTION"]; ?>"
+              method="post">
 
             <?= bitrix_sessid_post() ?>
             <input type="hidden" name="<? echo $arParams["ENABLE_VALIDATION_INPUT_NAME"]; ?>" id="<? echo $arParams["ENABLE_VALIDATION_INPUT_ID"]; ?>" value="Y">
             <input type="hidden" name="signedParamsString" value="<?= htmlspecialcharsbx($signedParams) ?>">
             <input type="hidden" name="sessid" value="<?= bitrix_sessid() ?>">
             <input type="hidden" name="SITE_ID" value="<?= SITE_ID ?>">
+            <?php $firstPaySystem = reset($arResult["PAY_SYSTEM"]); if ($firstPaySystem): ?>
+            <input type="hidden" name="<?=$arParams["FORM_NAME"]?>[PAY_SYSTEM]" value="<?=$firstPaySystem["ID"]?>">
+            <?php endif; ?>
             <div class="checkout_form_left">
                 <!-- Yetkazib berish usuli -->
                 <div class="delivery-methods">
@@ -79,11 +92,10 @@ if ($lastDeliveryId > 0) {
                             <label class="delivery-option">
                                 <input type="radio"
                                        <?= ($delivery["CHECKED"]) ? ('checked') : (''); ?>
-                                       id="pay_system_<?= $delivery["ID"] ?>"
-                                       name="delivery"
+                                       id="delivery_<?= $delivery["ID"] ?>"
+                                       name="<?=$arParams["FORM_NAME"]?>[DELIVERY]"
                                        value="<?= $delivery["ID"] ?>"
                                        autocomplete="off"
-                                       type="radio"
                                        data-delivery-id="<?= $delivery["ID"] ?>"
                                 />
                                 <img class="information_circle_ic" src="<?= SITE_TEMPLATE_PATH ?>/src/assets/svgicons/information_circle.svg" alt="<?=$delivery["NAME"]?>">
@@ -108,37 +120,37 @@ if ($lastDeliveryId > 0) {
                         <? foreach ($arResult["ORDER_PROPS"] as $props){?>
                             <? if ($props["CODE"] == "COMPANY"){ ?>
                                 <div class="input-group">
-                                    <input type="text" id="soa-property-<?=$props["ID"]?>" name="<?=$props["CODE"]?>" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?> autocomplete="">
+                                    <input type="text" id="soa-property-<?=$props["ID"]?>" name="<?=$arParams["FORM_NAME"]?>[<?=$props["CODE"]?>]" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?> autocomplete="">
                                 </div>
                             <? } ?>
 
                             <? if ($props["CODE"] == "INN"){ ?>
                                 <div class="input-group">
-                                    <input type="text" id="soa-property-<?=$props["ID"]?>" name="<?=$props["CODE"]?>" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
+                                    <input type="text" id="soa-property-<?=$props["ID"]?>" name="<?=$arParams["FORM_NAME"]?>[<?=$props["CODE"]?>]" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
                                 </div>
                             <? } ?>
 
                             <? if ($props["CODE"] == "CONTACT_PERSON_NAME"){ ?>
                                 <div class="input-group">
-                                    <input type="text" id="soa-property-<?=$props["ID"]?>" name="<?=$props["CODE"]?>" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
+                                    <input type="text" id="soa-property-<?=$props["ID"]?>" name="<?=$arParams["FORM_NAME"]?>[<?=$props["CODE"]?>]" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
                                 </div>
                             <? } ?>
 
                             <? if ($props["CODE"] == "CONTACT_PERSON_LASTNAME"){ ?>
                                 <div class="input-group">
-                                    <input type="text" id="soa-property-<?=$props["ID"]?>" name="<?=$props["CODE"]?>" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
+                                    <input type="text" id="soa-property-<?=$props["ID"]?>" name="<?=$arParams["FORM_NAME"]?>[<?=$props["CODE"]?>]" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
                                 </div>
                             <? } ?>
 
                             <? if ($props["CODE"] == "PHONE"){ ?>
                                 <div class="input-group">
-                                    <input type="tel" id="soa-property-<?=$props["ID"]?>" name="<?=$props["CODE"]?>" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
+                                    <input type="tel" id="soa-property-<?=$props["ID"]?>" name="<?=$arParams["FORM_NAME"]?>[<?=$props["CODE"]?>]" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
                                 </div>
                             <? } ?>
 
                             <? if ($props["CODE"] == "EMAIL"){ ?>
                                 <div class="input-group">
-                                    <input type="email" id="soa-property-<?=$props["ID"]?>" name="<?=$props["CODE"]?>" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
+                                    <input type="email" id="soa-property-<?=$props["ID"]?>" name="<?=$arParams["FORM_NAME"]?>[<?=$props["CODE"]?>]" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
                                 </div>
                             <? } ?>
                         <?}?>
@@ -147,31 +159,31 @@ if ($lastDeliveryId > 0) {
                         <? foreach ($arResult["ORDER_PROPS"] as $props){ ?>
                             <? if ($props["CODE"] == "LEGAL_ADR_REGION"){ ?>
                                 <div class="input-group">
-                                    <input type="text" id="soa-property-<?=$props["ID"]?>" name="<?=$props["CODE"]?>" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
+                                    <input type="text" id="soa-property-<?=$props["ID"]?>" name="<?=$arParams["FORM_NAME"]?>[<?=$props["CODE"]?>]" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
                                 </div>
                             <? } ?>
 
                             <? if ($props["CODE"] == "LEGAL_ADR_STREET"){ ?>
                                 <div class="input-group">
-                                    <input type="text" id="soa-property-<?=$props["ID"]?>" name="<?=$props["CODE"]?>" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
+                                    <input type="text" id="soa-property-<?=$props["ID"]?>" name="<?=$arParams["FORM_NAME"]?>[<?=$props["CODE"]?>]" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
                                 </div>
                             <? } ?>
 
                             <? if ($props["CODE"] == "LEGAL_ADR_DOM"){ ?>
                                 <div class="input-group w_3">
-                                    <input type="text" id="soa-property-<?=$props["ID"]?>" name="<?=$props["CODE"]?>" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
+                                    <input type="text" id="soa-property-<?=$props["ID"]?>" name="<?=$arParams["FORM_NAME"]?>[<?=$props["CODE"]?>]" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
                                 </div>
                             <? } ?>
 
                             <? if ($props["CODE"] == "LEGAL_ADR_KV"){ ?>
                                 <div class="input-group w_3">
-                                    <input type="text" id="soa-property-<?=$props["ID"]?>" name="<?=$props["CODE"]?>" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
+                                    <input type="text" id="soa-property-<?=$props["ID"]?>" name="<?=$arParams["FORM_NAME"]?>[<?=$props["CODE"]?>]" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
                                 </div>
                             <? } ?>
 
                             <? if ($props["CODE"] == "LEGAL_ADR_ZIP"){ ?>
                                 <div class="input-group w_3 w_mob_100">
-                                    <input type="text" id="soa-property-<?=$props["ID"]?>" name="<?=$props["CODE"]?>" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
+                                    <input type="text" id="soa-property-<?=$props["ID"]?>" name="<?=$arParams["FORM_NAME"]?>[<?=$props["CODE"]?>]" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
                                 </div>
                             <? } ?>
                         <?}?>
@@ -180,31 +192,31 @@ if ($lastDeliveryId > 0) {
                         <? foreach ($arResult["ORDER_PROPS"] as $props){ ?>
                             <? if ($props["CODE"] == "ACTUAL_ADR_REGION"){ ?>
                                 <div class="input-group">
-                                    <input type="text" id="soa-property-<?=$props["ID"]?>" name="<?=$props["CODE"]?>" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
+                                    <input type="text" id="soa-property-<?=$props["ID"]?>" name="<?=$arParams["FORM_NAME"]?>[<?=$props["CODE"]?>]" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
                                 </div>
                             <? } ?>
 
                             <? if ($props["CODE"] == "ACTUAL_ADR_STREET"){ ?>
                                 <div class="input-group">
-                                    <input type="text" id="soa-property-<?=$props["ID"]?>" name="<?=$props["CODE"]?>" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
+                                    <input type="text" id="soa-property-<?=$props["ID"]?>" name="<?=$arParams["FORM_NAME"]?>[<?=$props["CODE"]?>]" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
                                 </div>
                             <? } ?>
 
                             <? if ($props["CODE"] == "ACTUAL_ADR_DOM"){ ?>
                                 <div class="input-group w_3">
-                                    <input type="text" id="soa-property-<?=$props["ID"]?>" name="<?=$props["CODE"]?>" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
+                                    <input type="text" id="soa-property-<?=$props["ID"]?>" name="<?=$arParams["FORM_NAME"]?>[<?=$props["CODE"]?>]" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
                                 </div>
                             <? } ?>
 
                             <? if ($props["CODE"] == "ACTUAL_ADR_KV"){ ?>
                                 <div class="input-group w_3">
-                                    <input type="text" id="soa-property-<?=$props["ID"]?>" name="<?=$props["CODE"]?>" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
+                                    <input type="text" id="soa-property-<?=$props["ID"]?>" name="<?=$arParams["FORM_NAME"]?>[<?=$props["CODE"]?>]" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
                                 </div>
                             <? } ?>
 
                             <? if ($props["CODE"] == "ACTUAL_ADR_ZIP"){ ?>
                                 <div class="input-group w_3 w_mob_100">
-                                    <input type="text" id="soa-property-<?=$props["ID"]?>" name="<?=$props["CODE"]?>" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
+                                    <input type="text" id="soa-property-<?=$props["ID"]?>" name="<?=$arParams["FORM_NAME"]?>[<?=$props["CODE"]?>]" placeholder="<?=$props["NAME"]?>" <?=($props["REQUIRED"] ? 'required' : '')?>>
                                 </div>
                             <? } ?>
                         <?}?>

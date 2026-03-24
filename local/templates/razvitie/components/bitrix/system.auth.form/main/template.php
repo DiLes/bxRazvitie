@@ -61,7 +61,7 @@ if ($arResult['SHOW_ERRORS'] === 'Y' && $arResult['ERROR'] && !empty($arResult['
                 <?=GetMessage("AUTH_REMEMBER_SHORT")?>
             </label>
         <?}?>
-            <a href="<?=$arResult["AUTH_REGISTER_URL"]?>" class="forgot_password" rel="nofollow">Забыли пароль?</a>
+            <a href="#" class="forgot_password recovery_password_btn" rel="nofollow">Забыли пароль?</a>
         </div>
         <?if ($arResult["CAPTCHA_CODE"]){?>
             <?echo GetMessage("AUTH_CAPTCHA_PROMT")?>:<br />
@@ -73,7 +73,7 @@ if ($arResult['SHOW_ERRORS'] === 'Y' && $arResult['ERROR'] && !empty($arResult['
         <?if($arResult["NEW_USER_REGISTRATION"] == "Y"){?>
             <div class="signup_text">Нет аккаунта?
                 <noindex>
-                    <a href="<?=$arResult["AUTH_REGISTER_URL"]?>" rel="nofollow">Зарегистрироваться
+                    <a href="#" class="registration_btn" rel="nofollow">Зарегистрироваться
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
                             <path d="M6.75 13.5L11.25 9L6.75 4.5" stroke="#056BE9" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>

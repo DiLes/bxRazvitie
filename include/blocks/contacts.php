@@ -116,7 +116,7 @@
         </a>
     </div>
     <div class="contactss__item contacts__item--last">
-        <a href="#">
+        <a href="/contatcs/">
             <img src="<?=SITE_TEMPLATE_PATH?>/src/assets/svgicons/map.svg" alt="" />
         </a>
         <div>

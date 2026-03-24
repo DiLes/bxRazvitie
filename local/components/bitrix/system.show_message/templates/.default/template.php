@@ -41,8 +41,6 @@ $this->setFrameMode(true);
     </div>
     <div class="container white">
         <div class="recomended-products smilar-products cart_recom">
-            <h2>Вы недавно смотрели</h2>
-            <div class="swiper recomended-products__wrapper">
                 <?
                 $APPLICATION->IncludeComponent(
                     "bitrix:catalog.products.viewed",
@@ -103,23 +101,6 @@ $this->setFrameMode(true);
                     )
                 );
                 ?>
-            </div>
-            <div class="smilar-products__swiper-button-wraper">
-                <div class="recomended-products__swiper-prev swiper-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
-                        <g opacity="0.5">
-                            <path d="M11.25 13.5L6.75 9L11.25 4.5" stroke="#1A1A1A" stroke-linecap="round" stroke-linejoin="round" />
-                        </g>
-                    </svg>
-                </div>
-                <div class="recomended-products__swiper-next swiper-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
-                        <g opacity="0.5">
-                            <path d="M6.75 13.5L11.25 9L6.75 4.5" stroke="#1A1A1A" stroke-linecap="round" stroke-linejoin="round" />
-                        </g>
-                    </svg>
-                </div>
-            </div>
         </div>
     </div>
 </div>

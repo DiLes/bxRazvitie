@@ -523,6 +523,12 @@ const App = (function() {
                         if (data.status === "success") {
                         cartItem.remove();
                         updateTotal();
+
+                        // Обновляем счётчик мини-корзины
+                        document.querySelectorAll(".mini-basket .badge-wrapper span").forEach(el => {
+                            let currentCount = parseInt(el.textContent) || 0;
+                            el.textContent = Math.max(0, currentCount - 1);
+                        });
                     } else {
                         console.error(data.message || "Ошибка удаления");
                     }
@@ -556,6 +562,16 @@ const App = (function() {
                             if (data.status === "success") {
                             document.querySelectorAll(".cart-item").forEach(item => item.remove());
                             updateTotal();
+
+                            // Убираем класс success со всех кнопок корзины
+                            document.querySelectorAll(".korzina-btn.success").forEach(btn => {
+                                btn.classList.remove("success");
+                            });
+
+                            // Обнуляем счётчик мини-корзины
+                            document.querySelectorAll(".header__actions .mini-basket .badge-wrapper span").forEach(el => {
+                                el.textContent = "0";
+                            });
                         } else {
                             alert("Ошибка при очистке корзины: " + (data.message || ""));
                         }
@@ -1416,8 +1432,9 @@ const App = (function() {
             const newPassword = document.querySelector("#password_1");
             const repeatPassword = document.querySelector("#password_2");
             const submitBtn = document.querySelector(".submit_btn");
+            const changePasswordForm = document.querySelector("#changePasswordForm");
 
-            if (submitBtn) {
+            if (submitBtn && newPassword && repeatPassword && changePasswordForm) {
                 const errorText = document.createElement("p");
                 errorText.classList.add("error-message");
                 errorText.style.color = "red";
@@ -1441,7 +1458,7 @@ const App = (function() {
                 newPassword.addEventListener("input", checkPasswords);
                 repeatPassword.addEventListener("input", checkPasswords);
 
-                document.querySelector("#changePasswordForm").addEventListener("submit", function(e) {
+                changePasswordForm.addEventListener("submit", function(e) {
                     if (newPassword.value !== repeatPassword.value) {
                         e.preventDefault();
                         errorText.textContent = "Пароли не совпадают!";
@@ -2303,6 +2320,8 @@ const App = (function() {
                 const trigger = accordion.querySelector(".accordion-trigger");
                 const content = accordion.querySelector(".accordion-content");
 
+                if (!trigger || !content) return;
+
                 trigger.addEventListener("click", () => {
                     const isOpen = accordion.classList.contains("is-open");
 
@@ -2335,11 +2354,13 @@ const App = (function() {
         function viewAll() {
             document.querySelectorAll(".main-category__content-left .accordion").forEach((accordion) => {
                 const accordionContent = accordion.querySelector(".accordion-content");
+                if (!accordionContent) return;
+
                 const checkboxes = accordionContent.querySelectorAll(".custom-checkbox");
                 const viewAllButton = accordionContent.querySelector(".view-all");
 
                 const maxVisible = 5;
-                let isExpanded = false; // Флаг состояния
+                let isExpanded = false;
 
                 if (checkboxes.length > maxVisible) {
                     checkboxes.forEach((checkbox, index) => {
@@ -2348,18 +2369,20 @@ const App = (function() {
                         }
                     });
 
-                    viewAllButton.style.display = "block";
+                    if (viewAllButton) {
+                        viewAllButton.style.display = "block";
 
-                    viewAllButton.addEventListener("click", function() {
-                        isExpanded = !isExpanded; // Переключаем состояние
+                        viewAllButton.addEventListener("click", function() {
+                            isExpanded = !isExpanded;
 
-                        checkboxes.forEach((checkbox, index) => {
-                            checkbox.style.display = isExpanded || index < maxVisible ? "flex" : "none";
+                            checkboxes.forEach((checkbox, index) => {
+                                checkbox.style.display = isExpanded || index < maxVisible ? "flex" : "none";
+                            });
+
+                            viewAllButton.textContent = isExpanded ? "Скрыть" : "Показать все";
                         });
-
-                        viewAllButton.textContent = isExpanded ? "Скрыть" : "Показать все";
-                    });
-                } else {
+                    }
+                } else if (viewAllButton) {
                     viewAllButton.style.display = "none";
                 }
             });
@@ -2516,6 +2539,7 @@ const App = (function() {
             const cityList = document.querySelector(".city-grid");
             const modal = document.querySelector(".modal");
 
+            if (!cityList) return;
 
             cityList.addEventListener("click", function(event) {
                 if (event.target.tagName === "LI") {
@@ -2700,6 +2724,8 @@ const App = (function() {
             const trigger = document.querySelector(".header__menu-trigger");
             const navMenu = document.querySelector(".nav-menu");
 
+            if (!trigger || !navMenu) return;
+
             let clicked = false;
 
             trigger.addEventListener("click", () => {
@@ -2722,6 +2748,9 @@ const App = (function() {
         function init() {
             const headerBottom = document.querySelector(".header__bottom");
             const headerScroll = document.querySelector(".header__scroll");
+
+            console.log(headerBottom, 'headerBottom-2741');
+            console.log(headerScroll, 'headerScroll-2742');
 
             if (headerBottom && headerScroll) {
                 const observer = new IntersectionObserver(
@@ -2750,6 +2779,10 @@ const App = (function() {
             const headerBottom = document.querySelector(".header__bottom");
             const headerScroll = document.querySelector(".header__scroll");
             const fixedElement = document.querySelector(".catalog-popup");
+
+            console.log(headerBottom, 'headerBottom-2772');
+            console.log(headerScroll, 'headerScroll-2773');
+            console.log(fixedElement, 'fixedElement-2774');
 
             if (headerBottom && headerScroll && fixedElement) {
                 headerBottom.appendChild(fixedElement);
@@ -2814,6 +2847,8 @@ const App = (function() {
                 const clear = container.querySelector(".search-input__clear");
                 const searchPopup = document.querySelectorAll(".search-result")[idx];
                 const overlay = document.querySelectorAll(".search-form__overlay")[idx];
+
+                if (!input) return;
 
                 input.addEventListener("focus", () => {
                     container.classList.add("active");
@@ -2917,7 +2952,7 @@ const App = (function() {
             const dropdownTrigger = document.querySelector(".sort-dropdown__trigger");
             const dropdownContent = document.querySelector(".sort-dropdown__content");
 
-            if (!dropdownTrigger || !dropdownContent) return; // <-- Избегание ошибок
+            if (!dropdownTrigger || !dropdownContent) return;
 
             const dropdownOptions = dropdownContent.querySelectorAll("span");
             const triggerText = dropdownTrigger.querySelector("span");
@@ -2930,11 +2965,15 @@ const App = (function() {
                     "rotate(0deg)";
             });
 
-            dropdownOptions.forEach((option) => {
+            dropdownOptions.forEach((option, index) => {
                 option.addEventListener("click", function() {
                     triggerText.textContent = this.textContent;
                     dropdownContent.classList.remove("open");
                     arrowIcon.style.transform = "rotate(0deg)";
+
+                    // Сортировка по цене
+                    const sortOrder = index === 0 ? 'asc' : 'desc';
+                    sortProductsByPrice(sortOrder);
                 });
             });
 
@@ -2944,6 +2983,28 @@ const App = (function() {
                     arrowIcon.style.transform = "rotate(0deg)";
                 }
             });
+        }
+
+        function sortProductsByPrice(order) {
+            const container = document.querySelector(".main-category__products-grid");
+            if (!container) return;
+
+            const products = Array.from(container.querySelectorAll(".product-card"));
+            if (products.length === 0) return;
+
+            products.sort((a, b) => {
+                const priceA = parseFloat(a.dataset.price) || 0;
+                const priceB = parseFloat(b.dataset.price) || 0;
+
+                // Товары без цены (0) всегда в конце
+                if (priceA === 0 && priceB === 0) return 0;
+                if (priceA === 0) return 1;
+                if (priceB === 0) return -1;
+
+                return order === 'asc' ? priceA - priceB : priceB - priceA;
+            });
+
+            products.forEach(product => container.appendChild(product));
         }
 
         return {
@@ -3102,7 +3163,11 @@ const App = (function() {
     // --- Init all modules ---
     function init() {
         ZoomModule.init();
-        if (typeof SwiperModule !== "undefined") SwiperModule.init();
+        try {
+            if (typeof SwiperModule !== "undefined") SwiperModule.init();
+        } catch (e) {
+            console.error('SwiperModule error:', e);
+        }
         if (typeof AccordionModule !== "undefined") AccordionModule.init();
 
         if (typeof ModalModule !== "undefined") {
@@ -3130,3 +3195,139 @@ const App = (function() {
 })();
 
 document.addEventListener("DOMContentLoaded", App.init);
+
+// === AUTH MODALS (независимая инициализация) ===
+document.addEventListener("DOMContentLoaded", function() {
+    // Authorization Modal
+    const authorizationModal = document.querySelector(".authorization-modal");
+    const authorizationBtns = document.querySelectorAll(".authorization_btn");
+    const registrationModal = document.querySelector(".registration-modal");
+    const registrationBtns = document.querySelectorAll(".registration_btn");
+
+    if (authorizationModal && authorizationBtns.length) {
+        authorizationBtns.forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+                e.preventDefault();
+                // Закрыть окно регистрации, если открыто
+                if (registrationModal) registrationModal.classList.remove("active");
+                authorizationModal.classList.add("active");
+            });
+        });
+
+        authorizationModal.addEventListener("click", (e) => {
+            if (e.target === authorizationModal) {
+                authorizationModal.classList.remove("active");
+            }
+        });
+    }
+
+    // Registration Modal
+    if (registrationModal && registrationBtns.length) {
+        registrationBtns.forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+                e.preventDefault();
+                // Закрыть окно авторизации, если открыто
+                if (authorizationModal) authorizationModal.classList.remove("active");
+                registrationModal.classList.add("active");
+            });
+        });
+
+        registrationModal.addEventListener("click", (e) => {
+            if (e.target === registrationModal) {
+                registrationModal.classList.remove("active");
+            }
+        });
+    }
+
+    // Recovery Password Modal
+    const recoveryPasswordModal = document.querySelector(".recovery-password-modal");
+    const recoveryPasswordBtns = document.querySelectorAll(".recovery_password_btn");
+
+    if (recoveryPasswordModal && recoveryPasswordBtns.length) {
+        recoveryPasswordBtns.forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+                e.preventDefault();
+                // Закрыть другие модальные окна
+                if (authorizationModal) authorizationModal.classList.remove("active");
+                if (registrationModal) registrationModal.classList.remove("active");
+                recoveryPasswordModal.classList.add("active");
+            });
+        });
+
+        recoveryPasswordModal.addEventListener("click", (e) => {
+            if (e.target === recoveryPasswordModal) {
+                recoveryPasswordModal.classList.remove("active");
+            }
+        });
+    }
+
+    // Change Password Modal
+    const changePasswordModal = document.querySelector(".change-password-modal");
+    const changePasswordBtns = document.querySelectorAll(".change_password_btn");
+
+    if (changePasswordModal && changePasswordBtns.length) {
+        changePasswordBtns.forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+                e.preventDefault();
+                changePasswordModal.classList.add("active");
+            });
+        });
+
+        changePasswordModal.addEventListener("click", (e) => {
+            if (e.target === changePasswordModal) {
+                changePasswordModal.classList.remove("active");
+            }
+        });
+    }
+
+    // Logout Modal
+    const logoutModal = document.querySelector(".logout-modal");
+    const logoutBtns = document.querySelectorAll(".logout_btn");
+    const logoutConfirmBtn = document.querySelector(".logout_confirm_btn");
+    const logoutCancelBtn = logoutModal ? logoutModal.querySelector(".cancel") : null;
+    let logoutUrl = '';
+
+    if (logoutModal && logoutBtns.length) {
+        logoutBtns.forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+                e.preventDefault();
+                // Сохраняем URL выхода из data-атрибута
+                logoutUrl = btn.dataset.logoutUrl || '?logout=yes';
+                logoutModal.classList.add("active");
+            });
+        });
+
+        logoutModal.addEventListener("click", (e) => {
+            if (e.target === logoutModal) {
+                logoutModal.classList.remove("active");
+            }
+        });
+
+        // Подтверждение выхода
+        if (logoutConfirmBtn) {
+            logoutConfirmBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                if (logoutUrl) {
+                    window.location.href = logoutUrl;
+                }
+            });
+        }
+
+        // Отмена выхода
+        if (logoutCancelBtn) {
+            logoutCancelBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                logoutModal.classList.remove("active");
+            });
+        }
+    }
+
+    // Close buttons for all modals
+    document.querySelectorAll(".modal_z .close").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+            e.preventDefault();
+            const modal = btn.closest(".modal_z");
+            if (modal) modal.classList.remove("active");
+        });
+    });
+});

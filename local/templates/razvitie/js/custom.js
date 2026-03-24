@@ -22,46 +22,35 @@ const AppCustom = (function () {
                 e.preventDefault();
 
                 const productId = this.dataset.item;
-                console.log(productId,'productId-25');
                 if (!productId) {
                     console.error("❌ Не найден data-item у кнопки");
                     return;
                 }
 
-                fetch("/ajax/add2basket.php", {
+                const isInBasket = button.classList.contains("success");
+                const url = isInBasket ? "/ajax/delete_from_basket.php" : "/ajax/add2basket.php";
+
+                fetch(url, {
                     method: "POST",
                     headers: { "Content-Type": "application/x-www-form-urlencoded" },
                     body: "id=" + encodeURIComponent(productId) + "&quantity=1"
                 })
                     .then(res => res.json())
-            .then(data => {
-                    if (data.status === "success") {
-                    // ✅ Товар добавлен — меняем блоки
-                    const pbBottom = button.closest(".pb-bottom");
-                    if (pbBottom) {
-                        const noBasket = pbBottom.querySelector(".no-basket");
-                        const inBasket = pbBottom.querySelector(".in-basket");
+                    .then(data => {
+                        if (data.status === "success") {
+                            button.classList.toggle("success");
 
-                        if (noBasket && inBasket) {
-                            noBasket.style.display = "none";
-                            inBasket.style.display = "ruby";
+                            if (typeof updateBasketCounter === "function") {
+                                updateBasketCounter();
+                            }
+                        } else {
+                            alert("Ошибка: " + (data.message || "Не удалось выполнить операцию"));
                         }
-                    }
-
-                    // обновим мини-корзину (если есть функция)
-                    if (typeof updateBasketCounter === "function") {
-                        updateBasketCounter();
-                    }
-                } else {
-                    alert("Ошибка: " + (data.message || "Не удалось добавить товар"));
-                }
-            })
-            .catch(err => console.error("Ошибка запроса:", err));
+                    })
+                    .catch(err => console.error("Ошибка запроса:", err));
             });
         });
     });
-
-
 
     /* === ТОРГОВЫЕ ПРЕДЛОЖЕНИЯ === */
     function initOffers() {

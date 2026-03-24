@@ -121,7 +121,7 @@ if (empty($availablePages))
 }
 else
 {
-//    pre($arResult);
+    pre($arResult);
 
 	?>
 

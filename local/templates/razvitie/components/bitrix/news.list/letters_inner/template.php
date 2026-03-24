@@ -28,7 +28,7 @@ $plural = plural($elCnt, $type);
             $this->AddDeleteAction($arItem['ID'],$arItem['DELETE_LINK'],CIBlock::GetArrayByID($arItem["IBLOCK_ID"],"ELEMENT_DELETE"),array("CONFIRM" => GetMessage('CT_BNL_ELEMENT_DELETE_CONFIRM')));
             $img = $arItem['DETAIL_PICTURE'] ?: $arItem['PREVIEW_PICTURE'];
             $date = $arItem['ACTIVE_FROM'] ?: $arItem['TIMESTAMP_X'];
-            $hide = ($k >= 9) ? " hidd_z" : "";
+            $hide = ($k >= 6) ? " hidd_z" : "";
         ?>
             <a href="<?=$arItem['DETAIL_PAGE_URL']?>" class="doc_item load_item letters__item<?=$hide;?>">
                 <div class="doc_item_img">
@@ -41,7 +41,7 @@ $plural = plural($elCnt, $type);
             </a>
         <?}?>
     </div>
-    <?if ($elCnt > 9){?>
+    <?if ($elCnt > 6){?>
         <a href="#" class="btn_z mini load-more">Загрузить ещё</a>
     <?}?>
 </div>

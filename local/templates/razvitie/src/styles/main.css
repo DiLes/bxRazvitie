@@ -6995,7 +6995,7 @@ ul {
   display: flex;
 }
 .filter-popup__content {
-  height: 85dvh;
+  height: 75dvh;
   background: #ffffff;
   border-radius: 25px 25px 0px 0px;
   width: 100%;

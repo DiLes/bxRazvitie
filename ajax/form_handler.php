@@ -20,6 +20,68 @@ global $USER;
 $userId = $USER->IsAuthorized() ? $USER->GetID() : null;
 $siteId = Context::getCurrent()->getSite();
 
+// === СКИДКА ОТ ИГРЫ (привязка к ИНН) ===
+const GAME_DISCOUNT_IBLOCK_ID = 14; // ID инфоблока "Скидки от игры"
+
+/**
+ * Получить скидку по ИНН из инфоблока
+ */
+function getGameDiscountByINN($inn) {
+    if (empty($inn)) return 0;
+
+    $inn = preg_replace('/\D/', '', $inn);
+
+    $res = CIBlockElement::GetList(
+        ["ID" => "DESC"],
+        [
+            "IBLOCK_ID" => GAME_DISCOUNT_IBLOCK_ID,
+            "ACTIVE" => "Y",
+            "=PROPERTY_INN" => $inn
+        ],
+        false,
+        ["nTopCount" => 1],
+        ["ID", "PROPERTY_DISCOUNT"]
+    );
+
+    if ($row = $res->GetNext()) {
+        return (int)$row["PROPERTY_DISCOUNT_VALUE"];
+    }
+
+    return 0;
+}
+
+$gameDiscount = 0;
+$gameINN = "";
+
+// 1. Проверяем ИНН из POST (при оформлении заказа)
+if (!empty($_POST["INN"])) {
+    $gameINN = preg_replace('/\D/', '', $_POST["INN"]);
+    $gameDiscount = getGameDiscountByINN($gameINN);
+}
+
+// 2. Проверяем сессию
+if ($gameDiscount <= 0 && !empty($_SESSION["GAME_INN"])) {
+    $gameINN = $_SESSION["GAME_INN"];
+    $gameDiscount = (int)($_SESSION["GAME_DISCOUNT"] ?? 0);
+
+    // Дополнительно проверяем в БД (может быть обновлено)
+    $dbDiscount = getGameDiscountByINN($gameINN);
+    if ($dbDiscount > $gameDiscount) {
+        $gameDiscount = $dbDiscount;
+    }
+}
+
+// 3. Проверяем куки
+if ($gameDiscount <= 0 && !empty($_COOKIE["GAME_INN"])) {
+    $gameINN = $_COOKIE["GAME_INN"];
+    $gameDiscount = getGameDiscountByINN($gameINN);
+}
+
+// Валидация (только 5, 10, 15)
+if (!in_array($gameDiscount, [5, 10, 15])) {
+    $gameDiscount = 0;
+}
+
 $formType   = $_POST["FORM_TYPE"] ?? "request";
 $name       = trim($_POST["NAME"] ?? "");
 $inn        = trim($_POST["INN"] ?? "");
@@ -43,7 +105,13 @@ if ($formType === "one_click" && $productId > 0) {
         $order->setPersonTypeId(1);
         $currency = \Bitrix\Currency\CurrencyManager::getBaseCurrency();
         $order->setField("CURRENCY", $currency);
-        $order->setField("USER_DESCRIPTION", $comment ?: "Заказ через форму 1 клик");
+
+        // Добавляем информацию о скидке от игры в комментарий
+        $userDescription = $comment ?: "Заказ через форму 1 клик";
+        if ($gameDiscount > 0) {
+            $userDescription .= " | Скидка от игры: {$gameDiscount}%";
+        }
+        $order->setField("USER_DESCRIPTION", $userDescription);
         $order->setField("DATE_INSERT", new DateTime());
 
         $basket = Sale\Basket::create($siteId);
@@ -54,6 +122,18 @@ if ($formType === "one_click" && $productId > 0) {
             "LID" => $siteId,
             "PRODUCT_PROVIDER_CLASS" => "CCatalogProductProvider",
         ]);
+
+        // Применяем скидку от игры к товару
+        if ($gameDiscount > 0) {
+            $item->refresh();
+            $basePrice = $item->getPrice();
+            $discountPrice = $basePrice * (1 - $gameDiscount / 100);
+            $item->setField("CUSTOM_PRICE", "Y");
+            $item->setField("PRICE", round($discountPrice, 2));
+            $item->setField("DISCOUNT_PRICE", round($basePrice - $discountPrice, 2));
+            $item->setField("DISCOUNT_NAME", "Скидка от игры {$gameDiscount}%");
+        }
+
         $order->setBasket($basket);
 
         $propertyCollection = $order->getPropertyCollection();
@@ -133,7 +213,13 @@ elseif ($formType === "checkout") {
         $order = Sale\Order::create($siteId, $userId);
         $order->setPersonTypeId($personTypeId);
         $order->setField("CURRENCY", \Bitrix\Currency\CurrencyManager::getBaseCurrency());
-        $order->setField("USER_DESCRIPTION", $comment ?: "Заказ с сайта");
+
+        // Добавляем информацию о скидке от игры в комментарий
+        $userDescription = $comment ?: "Заказ с сайта";
+        if ($gameDiscount > 0) {
+            $userDescription .= " | Скидка от игры: {$gameDiscount}%";
+        }
+        $order->setField("USER_DESCRIPTION", $userDescription);
         $order->setField("DATE_INSERT", new DateTime());
 
         // Загружаем корзину пользователя
@@ -142,6 +228,20 @@ elseif ($formType === "checkout") {
             echo json_encode(["status" => "error", "message" => "Корзина пуста"]);
             exit;
         }
+
+        // Применяем скидку от игры к каждому товару в корзине
+        if ($gameDiscount > 0) {
+            foreach ($basket as $basketItem) {
+                $basePrice = $basketItem->getPrice();
+                $discountPrice = $basePrice * (1 - $gameDiscount / 100);
+                $basketItem->setField("CUSTOM_PRICE", "Y");
+                $basketItem->setField("PRICE", round($discountPrice, 2));
+                $basketItem->setField("DISCOUNT_PRICE", round($basePrice - $discountPrice, 2));
+                $basketItem->setField("DISCOUNT_NAME", "Скидка от игры {$gameDiscount}%");
+            }
+            $basket->save();
+        }
+
         $order->setBasket($basket);
 
         // Свойства заказа

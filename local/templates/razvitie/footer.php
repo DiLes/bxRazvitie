@@ -364,13 +364,13 @@ $APPLICATION->IncludeComponent("bitrix:main.include", "", array("AREA_FILE_SHOW"
                     <input type="checkbox" id="regToggleDifferences" name="checkbox">
                     Запомнить меня
                 </label>
-                <a href="#" class="forgot_password">Забыли пароль?</a>
+                <a href="#" class="forgot_password recovery_password_btn">Забыли пароль?</a>
             </div>
 
             <button type="submit" class="btn_primary">Войти</button>
 
             <div class="signup_text">Уже есть аккаунт?
-                <a href="#">Войти
+                <a href="#" class="authorization_btn">Войти
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
                         <path d="M6.75 13.5L11.25 9L6.75 4.5" stroke="#056BE9" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
@@ -395,25 +395,6 @@ $APPLICATION->IncludeComponent("bitrix:main.include", "", array("AREA_FILE_SHOW"
         <div class="modal-buttons">
             <button class="btn_primary white" data-order-id="12345">Отменить заказ</button>
             <button class="btn_primary ok_btn">Не отменять</button>
-        </div>
-    </div>
-</div>
-
-<div class="logout-modal modal_z">
-    <div class="modal-content">
-        <span class="close"><img src="<?=SITE_TEMPLATE_PATH?>/src/assets/svgicons/modal_x.svg" alt=""></span>
-        <div class="icon_box">
-            <img src="<?=SITE_TEMPLATE_PATH?>/src/assets/svgicons/exit_ic.svg" alt="">
-        </div>
-        <h2>Выйти <br>
-            из аккаунта?
-            <div class="subtitle">
-                Вы уверены, что хотите выйти из аккаунта?
-            </div>
-        </h2>
-        <div class="modal-buttons">
-            <button class="btn_primary white cancel" data-order-id="12345">Отмена</button>
-            <button class="btn_primary ok_btn">Выйти из аккаунта</button>
         </div>
     </div>
 </div>
