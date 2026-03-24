@@ -305,28 +305,29 @@ foreach ($arResult['SKU_PROPS'] as $skuProperty)
         "WARNING_IF_EMPTY_TEXT" => "Нет свойств"
     )
 );*/?>
-    <div class="breadcrumb mob">
-        <a href="#">Главная</a>
-        <img src="<?=SITE_TEMPLATE_PATH?>/src/assets/svgicons/arrow-right.svg" alt="" />
-        <a href="#">Школьные кабинеты</a>
-        <img src="<?=SITE_TEMPLATE_PATH?>/src/assets/svgicons/arrow-right.svg" alt="" />
-        <a href="#">Кабинет Физкультуры</a>
-        <img src="<?=SITE_TEMPLATE_PATH?>/src/assets/svgicons/arrow-right.svg" alt="" />
-        <a href="#">Спорт. оборудование</a>
-    </div>
+    <?$APPLICATION->IncludeComponent(
+        "bitrix:breadcrumb",
+        "breadcrumb_mob",
+        Array(
+            "PATH" => "",
+            "SITE_ID" => "s1",
+            "START_FROM" => "0"
+        )
+    );?>
     <div class="product-screen pr_sc_z">
         <div class="product-screen__top">
             <div class="product-screen__left-side">
                 <div class="product-screen__left-side-top">
-                    <div class="breadcrumb desc">
-                        <a href="#">Главная</a>
-                        <img src="<?=SITE_TEMPLATE_PATH?>/src/assets/svgicons/arrow-right.svg" alt="" />
-                        <a href="#">Школьные кабинеты</a>
-                        <img src="<?=SITE_TEMPLATE_PATH?>/src/assets/svgicons/arrow-right.svg" alt="" />
-                        <a href="#">Кабинет Физкультуры</a>
-                        <img src="<?=SITE_TEMPLATE_PATH?>/src/assets/svgicons/arrow-right.svg" alt="" />
-                        <a href="#">Спорт. оборудование</a>
-                    </div>
+                    <?$APPLICATION->IncludeComponent(
+                        "bitrix:breadcrumb",
+                        "catalog_element",
+                        Array(
+                            "PATH" => "",
+                            "SITE_ID" => "s1",
+                            "START_FROM" => "0"
+                        )
+                    );?>
+
                     <div class="product-screen__swiper-wrap">
                         <div class="swiper product-screen__swiper">
                             <div class="swiper-wrapper">
@@ -351,7 +352,7 @@ foreach ($arResult['SKU_PROPS'] as $skuProperty)
                                 <span>-<?=$price["PERCENT"]?>%</span>
                             <?}?>
                             <?if ($isHit){?>
-                                <span>Хит</span>
+                                <span class="product-card-hit">Хит</span>
                             <?}?>
                         </div>
                         <div class="action-buttons">
@@ -1221,7 +1222,7 @@ foreach ($arResult['SKU_PROPS'] as $skuProperty)
     window.OffersData = <?=CUtil::PhpToJSObject($arResult['JS_OFFERS'])?>;
 
     const currentOffer = <?=$obName?>.offers[<?=$obName?>.offerNum];
-    console.log('Активный оффер:', currentOffer);
+    // console.log('Активный оффер:', currentOffer);
     <?=$obName?>.offers.forEach(o => {
         console.log('ID:', o.ID, 'Цена:', o.PRICE.PRINT_PRICE, 'Артикул:', o.PROPERTIES.ARTNUMBER.VALUE);
     });

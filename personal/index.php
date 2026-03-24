@@ -1,5 +1,12 @@
 <?
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/header.php");
+
+// Проверка авторизации для раздела личного кабинета
+global $USER;
+if (!$USER->IsAuthorized()) {
+    LocalRedirect("/auth/?backurl=" . urlencode($_SERVER["REQUEST_URI"]));
+}
+
 $APPLICATION->SetTitle("Личный кабинет");
 $APPLICATION->IncludeComponent(
 	"bitrix:sale.personal.section", 

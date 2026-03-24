@@ -120,8 +120,15 @@ $containerName = 'container-'.$navParams['NavNum'];
 $themeClass = isset($arParams['TEMPLATE_THEME']) ? ' bx-'.$arParams['TEMPLATE_THEME'] : '';
 
 ?>
-
-<!--catalog.section start-->
+<?if (empty($arResult['ITEMS']) && empty($arResult['ITEM_ROWS'])){?>
+    <div class="container white">
+        <div class="call_back_info_block empty_cart">
+            <h3 class="call_back_info_title">К сожалению, здесь ничего не нашлось.
+                <br>Попробуйте сбросить фильтры или загляните в похожие категории</h3>
+            <a href="/catalog/" class="call_back_info_btn">В каталог</a>
+        </div>
+    </div>
+<?}?>
 
 <div class="main-category__products-grid" data-entity="<?=$containerName?>">
     <!-- items-container -->
@@ -258,8 +265,9 @@ $themeClass = isset($arParams['TEMPLATE_THEME']) ? ' bx-'.$arParams['TEMPLATE_TH
                     case 2:
                         foreach ($rowItems as $item)
                         {
+                            $itemPrice = $item['ITEM_PRICES'][$item['ITEM_PRICE_SELECTED']]['PRICE'] ?? 0;
                             ?>
-                            <div class="product-card">
+                            <div class="product-card" data-price="<?=$itemPrice?>">
                                 <?
                                 $APPLICATION->IncludeComponent(
                                     'bitrix:catalog.item',
@@ -647,7 +655,9 @@ $themeClass = isset($arParams['TEMPLATE_THEME']) ? ' bx-'.$arParams['TEMPLATE_TH
     }
     else
     {
-        // load css for bigData/deferred load
+        ?>
+
+        <?// load css for bigData/deferred load
         $APPLICATION->IncludeComponent(
             'bitrix:catalog.item',
             'bootstrap_v4',

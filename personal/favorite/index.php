@@ -4,6 +4,13 @@
  * @global $arUser
  */
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/header.php");
+
+// Проверка авторизации для страницы избранного
+global $USER;
+if (!$USER->IsAuthorized()) {
+    LocalRedirect("/auth/?backurl=" . urlencode($_SERVER["REQUEST_URI"]));
+}
+
 $APPLICATION->SetTitle("Избранное");
 $favs = $arUser["UF_FAVORITES"] ?? [];
 if (is_string($favs)) {

@@ -1,9 +1,5 @@
-<?php
-
-if (!defined('B_PROLOG_INCLUDED') || B_PROLOG_INCLUDED !== true)
-{
-	die();
-}
+<?
+if (!defined('B_PROLOG_INCLUDED') || B_PROLOG_INCLUDED !== true) die();
 
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Sale;
@@ -223,15 +219,26 @@ if (is_string($favs)) {
             <a href="<?=$item["DETAIL_PAGE_URL"]?>">
                 <h3 class="title"><?=$item["NAME"]?></h3>
             </a>
+            <?
+//            pre($price);
+            ?>
             <div class="price">
                 <span class="new-price"><?=$price["PRINT_PRICE"]?></span>
+                <?if ($price["DISCOUNT"] > 0){?>
                 <span class="old-price"><?=$price["PRINT_BASE_PRICE"]?></span>
+                <?}?>
             </div>
+
             <div class="bottom-section">
+                <?if (!empty($price)){?>
                 <a href="javascript:void(0);" class="buy-btn one_buy_click-trigger" data-item="<?=$actualItem["ID"]?>">Купить в 1 клик</a>
                 <a href="javascript:void(0);" class="korzina-btn<?=($inBasket)?(' success'):('');?>" data-item="<?=$actualItem["ID"]?>">
                     <img src="<?=SITE_TEMPLATE_PATH?>/src/assets/svgicons/buy.svg" alt="" />
                 </a>
+                <?} else {?>
+                    <a href="<?=$item["DETAIL_PAGE_URL"]?>" class="buy-btn detail-btn">Подробнее</a>
+                <?}?>
             </div>
+
         </div>
     </div>

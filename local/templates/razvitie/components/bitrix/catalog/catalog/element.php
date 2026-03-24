@@ -30,7 +30,7 @@ $isSidebar = ($arParams['SIDEBAR_DETAIL_SHOW'] == 'Y' && !empty($arParams['SIDEB
 $isSidebarLeft = isset($arParams['SIDEBAR_SECTION_POSITION']) && $arParams['SIDEBAR_SECTION_POSITION'] === 'left';
 ?>
 <div class="row bx-<?=$arParams['TEMPLATE_THEME']?>">
-	<div class='<?=($isSidebar ? 'col-md-9 col-sm-8' : 'col')?>'>
+	<div class='<?=($isSidebar ? '' : 'col')?>'>
 		<?
 		/*if ($arParams["USE_COMPARE"] === "Y")
 		{
@@ -324,6 +324,7 @@ $isSidebarLeft = isset($arParams['SIDEBAR_SECTION_POSITION']) && $arParams['SIDE
 
 //            pre($_SESSION);
 //            pre($_COOKIE);
+//            pre($recommendedData);
 
 			if (!empty($recommendedData))
 			{
@@ -1313,10 +1314,9 @@ $isSidebarLeft = isset($arParams['SIDEBAR_SECTION_POSITION']) && $arParams['SIDE
 				)
 				{
 					?>
-                    <!--DETAIL_SHOW_VIEWED-->
 
+                    <!--DETAIL_SHOW_VIEWED-->
                             <div class="smilar-products">
-                                <h2><?=GetMessage('CATALOG_VIEWED')?></h2>
                                 <? $APPLICATION->IncludeComponent(
                                     'bitrix:catalog.products.viewed',
                                     'catalog',
@@ -1344,7 +1344,7 @@ $isSidebarLeft = isset($arParams['SIDEBAR_SECTION_POSITION']) && $arParams['SIDE
                                         'PRICE_CODE' => $arParams['~PRICE_CODE'],
                                         'USE_PRICE_COUNT' => $arParams['USE_PRICE_COUNT'],
                                         'SHOW_PRICE_COUNT' => $arParams['SHOW_PRICE_COUNT'],
-                                        'PAGE_ELEMENT_COUNT' => 10,
+                                        'PAGE_ELEMENT_COUNT' => 5,
                                         'SECTION_ELEMENT_ID' => $elementId,
 
                                         "SET_TITLE" => "N",
@@ -1413,22 +1413,6 @@ $isSidebarLeft = isset($arParams['SIDEBAR_SECTION_POSITION']) && $arParams['SIDE
                                     $component
                                 );
                                 ?>
-                                <div class="smilar-products__swiper-button-wraper">
-                                    <div class="smilar-products__swiper-prev swiper-btn">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
-                                            <g opacity="0.5">
-                                                <path d="M11.25 13.5L6.75 9L11.25 4.5" stroke="#1A1A1A" stroke-linecap="round" stroke-linejoin="round" />
-                                            </g>
-                                        </svg>
-                                    </div>
-                                    <div class="smilar-products__swiper-next swiper-btn">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
-                                            <g opacity="0.5">
-                                                <path d="M6.75 13.5L11.25 9L6.75 4.5" stroke="#1A1A1A" stroke-linecap="round" stroke-linejoin="round" />
-                                            </g>
-                                        </svg>
-                                    </div>
-                                </div>
                             </div>
 					<?
 				}

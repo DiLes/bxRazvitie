@@ -15,13 +15,11 @@ $this->setFrameMode(true);
 $strSectionEdit = CIBlock::GetArrayByID($arParams["IBLOCK_ID"], "SECTION_EDIT");
 $strSectionDelete = CIBlock::GetArrayByID($arParams["IBLOCK_ID"], "SECTION_DELETE");
 $arSectionDeleteParams = array("CONFIRM" => GetMessage('CT_BCSL_ELEMENT_DELETE_CONFIRM'));
-
-//$this->AddEditAction($arResult['SECTION']['ID'], $arResult['SECTION']['EDIT_LINK'], $strSectionEdit);
-//$this->AddDeleteAction($arResult['SECTION']['ID'], $arResult['SECTION']['DELETE_LINK'], $strSectionDelete, $arSectionDeleteParams);
-
 ?>
+
 <div class="categories category-page">
     <div class="categories__bottom">
+        <?if (!empty($arResult['SECTIONS'] )){?>
         <div class="swiper categories-swiper__wrapper">
 
             <div class="swiper-wrapper">
@@ -30,7 +28,6 @@ $arSectionDeleteParams = array("CONFIRM" => GetMessage('CT_BCSL_ELEMENT_DELETE_C
                     $this->AddEditAction($arSection['ID'], $arSection['EDIT_LINK'], $strSectionEdit);
                     $this->AddDeleteAction($arSection['ID'], $arSection['DELETE_LINK'], $strSectionDelete, $arSectionDeleteParams);
                     $img = $arSection["PICTURE"];
-                    //echo '<pre>'; print_r($k); echo '</pre>';
                     $extraClass = ($k % 2 === 1) ? ' second-slide' : '';
                 ?>
                     <a href="<?=$arSection["SECTION_PAGE_URL"]?>" class="swiper-slide<?=$extraClass?>" id="<?=$this->GetEditAreaId($arSection['ID']); ?>">
@@ -93,5 +90,6 @@ $arSectionDeleteParams = array("CONFIRM" => GetMessage('CT_BCSL_ELEMENT_DELETE_C
                 </g>
             </svg>
         </div>
+        <?}?>
     </div>
 </div>

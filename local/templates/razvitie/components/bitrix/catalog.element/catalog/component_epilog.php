@@ -62,7 +62,9 @@ if (isset($templateData['JS_OBJ']))
 			{
 				foreach ($item['JS_OFFERS'] as $key => $offer)
 				{
-					if (array_key_exists($offer['ID'], $_SESSION[$arParams['COMPARE_NAME']][$item['IBLOCK_ID']]['ITEMS']))
+                    pre($offer);
+                    pre($_SESSION[$arParams['COMPARE_NAME']][$item['IBLOCK_ID']]['ITEMS']); die();
+					/*if (array_key_exists($offer['ID'], $_SESSION[$arParams['COMPARE_NAME']][$item['IBLOCK_ID']]['ITEMS']))
 					{
 						if ($key == $item['OFFERS_SELECTED'])
 						{
@@ -70,13 +72,13 @@ if (isset($templateData['JS_OBJ']))
 						}
 
 						$comparedIds[] = $offer['ID'];
-					}
+					}*/
 				}
 			}
-			elseif (array_key_exists($item['ID'], $_SESSION[$arParams['COMPARE_NAME']][$item['IBLOCK_ID']]['ITEMS']))
+			/*elseif (array_key_exists($item['ID'], $_SESSION[$arParams['COMPARE_NAME']][$item['IBLOCK_ID']]['ITEMS']))
 			{
 				$compared = true;
-			}
+			}*/
 		}
 
 		if ($templateData['JS_OBJ'])

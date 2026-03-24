@@ -20,6 +20,17 @@ else
 	$basketAction = $arParams['SECTION_ADD_TO_BASKET_ACTION'] ?? '';
 }
 
+// Определение режима отображения товаров (tile, list, text)
+$catalogViewMode = $_COOKIE['catalog_view_mode'] ?? 'tile';
+if (!in_array($catalogViewMode, ['tile', 'list', 'text'])) {
+    $catalogViewMode = 'tile';
+}
+$gridModifierClass = '';
+if ($catalogViewMode === 'list') {
+    $gridModifierClass = ' main-category__products-grid--list';
+} elseif ($catalogViewMode === 'text') {
+    $gridModifierClass = ' main-category__products-grid--table';
+}
 
 if ($isSidebar)
 {
@@ -67,8 +78,17 @@ $sectionListParams = array(
     "VIEW_MODE" => $arParams["SECTIONS_VIEW_MODE"],
     "SHOW_PARENT_NAME" => $arParams["SECTIONS_SHOW_PARENT_NAME"],
     "HIDE_SECTION_NAME" => (isset($arParams["SECTIONS_HIDE_SECTION_NAME"]) ? $arParams["SECTIONS_HIDE_SECTION_NAME"] : "N"),
-    "ADD_SECTIONS_CHAIN" => (isset($arParams["ADD_SECTIONS_CHAIN"]) ? $arParams["ADD_SECTIONS_CHAIN"] : '')
+    "ADD_SECTIONS_CHAIN" => "N"
 );
+
+// В начале section_vertical.php
+$viewMode = $_GET['view'] ?? ($_COOKIE['catalog_view'] ?? 'tile');
+$gridClass = 'main-category__products-grid';
+if ($viewMode === 'list') $gridClass .= ' main-category__products-grid--list';
+if ($viewMode === 'text') $gridClass .= ' main-category__products-grid--table';
+$elCnt = $arResult["VARIABLES"]["ELEMENT_CNT"];
+$type = 'product';
+$plural = plural($elCnt, $type);
 ?>
 
 <?if ($arResult["VARIABLES"]["SECTION"]["DEPTH_LEVEL"] == 1){?>
@@ -140,7 +160,7 @@ $sectionListParams = array(
                     </g>
                 </svg>
             </a>
-            <h1><?$APPLICATION->ShowTitle()?><span class="element-cnt"><?=$arResult["VARIABLES"]["ELEMENT_CNT"]?> товаров</span></h1>
+            <h1><?$APPLICATION->ShowTitle()?><span class="element-cnt"><?=$plural?></span></h1>
         </div>
     </div>
 
@@ -161,7 +181,7 @@ $sectionListParams = array(
         "VIEW_MODE" => $arParams["SECTIONS_VIEW_MODE"],
         "SHOW_PARENT_NAME" => $arParams["SECTIONS_SHOW_PARENT_NAME"],
         "HIDE_SECTION_NAME" => (isset($arParams["SECTIONS_HIDE_SECTION_NAME"]) ? $arParams["SECTIONS_HIDE_SECTION_NAME"] : "N"),
-        "ADD_SECTIONS_CHAIN" => (isset($arParams["ADD_SECTIONS_CHAIN"]) ? $arParams["ADD_SECTIONS_CHAIN"] : '')
+        "ADD_SECTIONS_CHAIN" => "N"
     );
     //echo '<pre>'; print_r($sectionListParams["DEPTH_LEVEL"]); echo '</pre>';
 
@@ -180,56 +200,11 @@ $sectionListParams = array(
         <div class="main-category__filter-top">
             <div class="filter-left-side">
                 <span class="main-category__filter-title hide">Фильтры</span>
-                <div class="main-category__filter-list">
-                    <button>
-                        От 64 000 ₽
-                        <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="6"
-                                height="6"
-                                viewBox="0 0 6 6"
-                                fill="none"
-                        >
-                            <path
-                                    d="M0.666016 0.666017L5.33268 5.33268M0.666025 5.33268L2.99936 2.99935L5.33269 0.666016"
-                                    stroke="#1A1A1A"
-                                    stroke-linecap="round"
-                            />
-                        </svg>
-                    </button>
-                    <button>
-                        Социально-коммуникативное развитие
-                        <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="6"
-                                height="6"
-                                viewBox="0 0 6 6"
-                                fill="none"
-                        >
-                            <path
-                                    d="M0.666016 0.666017L5.33268 5.33268M0.666025 5.33268L2.99936 2.99935L5.33269 0.666016"
-                                    stroke="#1A1A1A"
-                                    stroke-linecap="round"
-                            />
-                        </svg>
-                    </button>
-                    <button>
-                        Бренд 1
-                        <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="6"
-                                height="6"
-                                viewBox="0 0 6 6"
-                                fill="none"
-                        >
-                            <path
-                                    d="M0.666016 0.666017L5.33268 5.33268M0.666025 5.33268L2.99936 2.99935L5.33269 0.666016"
-                                    stroke="#1A1A1A"
-                                    stroke-linecap="round"
-                            />
-                        </svg>
-                    </button>
-                    <button>Сбросить все</button>
+                <div class="update_ajax_filter">
+
+                </div>
+                <div class="main-category__filter-list " id="active-filters-list">
+                    <!-- Теги фильтров добавляются через JavaScript из component_epilog.php -->
                 </div>
             </div>
             <div class="filter-right-side">
@@ -281,8 +256,8 @@ $sectionListParams = array(
                         <span>Фильтры</span>
                     </button>
                 </div>
-                <div class="main-category__view">
-                    <a href="#" class="view-item">
+                <div class="main-category__view" id="catalog-view-switcher">
+                    <a href="#" class="view-item tile<?=($catalogViewMode === 'tile' ? ' active' : '')?>" data-view="tile">
                         <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 width="14"
@@ -316,7 +291,7 @@ $sectionListParams = array(
                             />
                         </svg>
                     </a>
-                    <a href="#" class="view-item">
+                    <a href="#" class="view-item list<?=($catalogViewMode === 'list' ? ' active' : '')?>" data-view="list">
                         <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 width="15"
@@ -348,8 +323,9 @@ $sectionListParams = array(
                                     d="M1.75 10.5C1.75 10.9142 1.41421 11.25 1 11.25C0.585786 11.25 0.25 10.9142 0.25 10.5C0.25 10.0858 0.585786 9.75 1 9.75C1.41421 9.75 1.75 10.0858 1.75 10.5Z"
                                     fill="#1A1A1A"
                             /></svg
-                        ></a>
-                    <a href="#" class="view-item">
+                        >
+                    </a>
+                    <a href="#" class="view-item text<?=($catalogViewMode === 'text' ? ' active' : '')?>" data-view="text">
                         <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 width="12"
@@ -421,20 +397,8 @@ $sectionListParams = array(
                     <?
                     //region Sidebar
                     if ($isSidebar){ ?>
-
-                        <a href="#" class="download-pdf">
-                            <img src="<?=SITE_TEMPLATE_PATH?>/src/assets/images/Free_Square_Brochure_Mockup_05.png" alt="">
-                            <div class="ctn">
-                                <span>Скачать брошюру в формате PDF</span>
-                                <svg width="92" height="91" viewBox="0 0 92 91" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <circle opacity="0.1" cx="46" cy="45.2548" r="31.5" transform="rotate(45 46 45.2548)" stroke="white"></circle>
-                                    <path d="M41.0508 40.3047L50.9503 50.2042" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                                    <path d="M50.9492 40.3047V50.2042H41.0497" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                                </svg>
-                            </div>
-                        </a>
                             <?
-                            /*$APPLICATION->IncludeComponent(
+                            $APPLICATION->IncludeComponent(
                                 "bitrix:main.include",
                                 "",
                                 Array(
@@ -445,9 +409,8 @@ $sectionListParams = array(
                                     ),
                                 false,
                                 array('HIDE_ICONS' => 'Y')
-                            );*/
+                            );
                             ?>
-
                     <?}
                     //endregion
                     ?>
@@ -723,7 +686,7 @@ $sectionListParams = array(
                     "VIEW_MODE" => $arParams["SECTIONS_VIEW_MODE"],
                     "SHOW_PARENT_NAME" => $arParams["SECTIONS_SHOW_PARENT_NAME"],
                     "HIDE_SECTION_NAME" => (isset($arParams["SECTIONS_HIDE_SECTION_NAME"]) ? $arParams["SECTIONS_HIDE_SECTION_NAME"] : "N"),
-                    "ADD_SECTIONS_CHAIN" => (isset($arParams["ADD_SECTIONS_CHAIN"]) ? $arParams["ADD_SECTIONS_CHAIN"] : '')
+                    "ADD_SECTIONS_CHAIN" => "N"
                 );
                 if ($sectionListParams["COUNT_ELEMENTS"] === "Y")
                 {

@@ -112,9 +112,9 @@ $generalParams = array(
 $obName = 'ob'.preg_replace('/[^a-zA-Z0-9_]/', 'x', $this->GetEditAreaId($this->randString()));
 $containerName = 'catalog-products-viewed-container';
 
-$themeClass = isset($arParams['TEMPLATE_THEME']) ? ' bx-'.$arParams['TEMPLATE_THEME'] : '';
 ?>
-<div class="swiper smilar-products__wrapper" data-entity="<?=$containerName?>">
+<h2>Вы недавно смотрели</h2>
+<div class="swiper recomended-products__wrapper" data-entity="<?=$containerName?>">
 	<?
 	if (!empty($arResult['ITEMS']) && !empty($arResult['ITEM_ROWS']))
 	{
@@ -129,7 +129,6 @@ $themeClass = isset($arParams['TEMPLATE_THEME']) ? ' bx-'.$arParams['TEMPLATE_TH
 		}
 		?>
         <div class="swiper-wrapper">
-		<!-- items-container -->
 		<?
 		foreach ($arResult['ITEM_ROWS'] as $rowData)
 		{
@@ -203,7 +202,8 @@ $themeClass = isset($arParams['TEMPLATE_THEME']) ? ' bx-'.$arParams['TEMPLATE_TH
 						{
 							?>
                             <!--case 2-->
-							<div class="col-sm-4 product-item-big-card">
+                            <div class="swiper-slide">
+							    <div class="product-card">
 								<?
 								$APPLICATION->IncludeComponent(
 									'bitrix:catalog.item',
@@ -225,6 +225,7 @@ $themeClass = isset($arParams['TEMPLATE_THEME']) ? ' bx-'.$arParams['TEMPLATE_TH
 								);
 								?>
 							</div>
+                            </div>
 							<?
 						}
 						break;
@@ -595,6 +596,23 @@ $themeClass = isset($arParams['TEMPLATE_THEME']) ? ' bx-'.$arParams['TEMPLATE_TH
 		);
 	}
 	?>
+</div>
+
+<div class="smilar-products__swiper-button-wraper">
+    <div class="smilar-products__swiper-prev swiper-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <g opacity="0.5">
+                <path d="M11.25 13.5L6.75 9L11.25 4.5" stroke="#1A1A1A" stroke-linecap="round" stroke-linejoin="round" />
+            </g>
+        </svg>
+    </div>
+    <div class="smilar-products__swiper-next swiper-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <g opacity="0.5">
+                <path d="M6.75 13.5L11.25 9L6.75 4.5" stroke="#1A1A1A" stroke-linecap="round" stroke-linejoin="round" />
+            </g>
+        </svg>
+    </div>
 </div>
 
 <script>
