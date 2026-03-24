@@ -59,7 +59,6 @@ if (isset($templateData['TEMPLATE_THEME']))
                     $prices[$step_num] = number_format($arItem["VALUES"]["MAX"]["VALUE"], $precision, ".", "");
                 }
 
-//                echo '<pre>'; print_r($arItem); echo '</pre>';
                 ?>
                 <div class="input-section" data-role="bx_filter_block">
                         <span>Цена</span>
@@ -130,7 +129,12 @@ if (isset($templateData['TEMPLATE_THEME']))
             }
             ?>
 
-            <div class="accordion">
+            <?php
+            // Подсчёт количества значений для кнопки "Показать все"
+            $valuesCount = count($arItem["VALUES"]);
+            $showMoreLimit = 5; // Показывать первые 5 элементов
+            ?>
+            <div class="accordion<?php if ($arItem["DISPLAY_EXPANDED"] == "Y") echo ' bx-active'; ?>">
                 <div class="accordion-trigger" onclick="smartFilter.hideFilterProps(this)">
                     <span><?=$arItem["NAME"]?></span>
                     <svg
@@ -150,13 +154,10 @@ if (isset($templateData['TEMPLATE_THEME']))
                             />
                         </g>
                     </svg>
-
-                    <span data-role="prop_angle" class="smart-filter-angle smart-filter-angle-<?if ($arItem["DISPLAY_EXPANDED"]== "Y"):?>up<?else:?>down<?endif?>">
-                        <span  class="smart-filter-angles"></span>
-                    </span>
+                    <span data-role="prop_angle" class="smart-filter-angle smart-filter-angle-<?php if ($arItem["DISPLAY_EXPANDED"] == "Y"): ?>up<?php else: ?>down<?php endif; ?>" style="display:none;"></span>
                 </div>
 
-                <div class="accordion-content" data-role="bx_filter_block">
+                <div class="accordion-content" data-role="bx_filter_block"<?php if ($arItem["DISPLAY_EXPANDED"] != "Y") echo ' style="display:none;"'; ?>>
 
                     <?
                     $arCur = current($arItem["VALUES"]);
@@ -631,19 +632,23 @@ if (isset($templateData['TEMPLATE_THEME']))
 
                         //region CHECKBOXES +
                         default:
+                            $checkboxIndex = 0;
+                            $uniqueId = 'filter_' . $key;
                             ?>
 
-                            <?foreach($arItem["VALUES"] as $val => $ar):
-//                            echo '<pre>'; print_r($ar); echo '</pre>';?>
-                                <label data-role="label_<?=$ar["CONTROL_ID"]?>" class="custom-checkbox" for="<? echo $ar["CONTROL_ID"] ?>">
+                            <?php foreach($arItem["VALUES"] as $val => $ar):
+                                $checkboxIndex++;
+                                $hiddenClass = ($checkboxIndex > $showMoreLimit && $valuesCount > $showMoreLimit) ? ' hidden-checkbox' : '';
+                            ?>
+                                <label data-role="label_<?=$ar["CONTROL_ID"]?>" class="custom-checkbox<?=$hiddenClass?>" for="<?=$ar["CONTROL_ID"]?>" data-filter-group="<?=$uniqueId?>">
                                     <input
                                             type="checkbox"
-                                            value="<? echo $ar["HTML_VALUE"] ?>"
-                                            name="<? echo $ar["CONTROL_NAME"] ?>"
-                                            id="<? echo $ar["CONTROL_ID"] ?>"
+                                            value="<?=$ar["HTML_VALUE"]?>"
+                                            name="<?=$ar["CONTROL_NAME"]?>"
+                                            id="<?=$ar["CONTROL_ID"]?>"
                                             class=""
-                                        <? echo $ar["CHECKED"]? 'checked="checked"': '' ?>
-                                        <? echo $ar["DISABLED"] ? 'disabled': '' ?>
+                                        <?=$ar["CHECKED"] ? 'checked="checked"' : ''?>
+                                        <?=$ar["DISABLED"] ? 'disabled' : ''?>
                                             onclick="smartFilter.click(this)"
                                     />
                                     <span class="checkmark">
@@ -663,14 +668,17 @@ if (isset($templateData['TEMPLATE_THEME']))
                                         </svg>
                                     </span>
                                     <span class="checkbox-text">
-                                        <?=$ar["VALUE"];?>
+                                        <?=$ar["VALUE"]?>
                                     </span>
-                                    <?if ($arParams["DISPLAY_ELEMENT_COUNT"] !== "N" && isset($ar["ELEMENT_COUNT"])):
-                                        ?>&nbsp;(<span data-role="count_<?=$ar["CONTROL_ID"]?>"><? echo $ar["ELEMENT_COUNT"]; ?></span>)<?
-                                    endif;?>
+                                    <?php if ($arParams["DISPLAY_ELEMENT_COUNT"] !== "N" && isset($ar["ELEMENT_COUNT"])): ?>
+                                        &nbsp;(<span data-role="count_<?=$ar["CONTROL_ID"]?>"><?=$ar["ELEMENT_COUNT"]?></span>)
+                                    <?php endif; ?>
                                 </label>
-                            <?endforeach;?>
-                    <?
+                            <?php endforeach; ?>
+                            <?php if ($valuesCount > $showMoreLimit): ?>
+                                <button type="button" class="view-all" data-filter-group="<?=$uniqueId?>" onclick="smartFilter.toggleViewAll(this, '<?=$uniqueId?>')">Показать все</button>
+                            <?php endif; ?>
+                    <?php
                         //endregion
                     }
                     ?>
@@ -682,27 +690,26 @@ if (isset($templateData['TEMPLATE_THEME']))
         ?>
     <!--//row-->
 
-    <div class="accordion">
-        <input
-            class="submit-btn"
-            type="submit"
-            id="set_filter"
-            name="set_filter"
-            value="<?=GetMessage("CT_BCSF_SET_FILTER")?>"
-        />
-        <!--<input
-            class="btn btn-link submit-btn"
-            type="submit"
-            id="del_filter"
-            name="del_filter"
-            value="<?/*=GetMessage("CT_BCSF_DEL_FILTER")*/?>"
-        />-->
-        <div class="smart-filter-popup-result <?if ($arParams["FILTER_VIEW_MODE"] == "VERTICAL") echo $arParams["POPUP_POSITION"]?>" id="modef" <?if(!isset($arResult["ELEMENT_COUNT"])) echo 'style="display:none"';?> style="display: inline-block;">
-            <?echo GetMessage("CT_BCSF_FILTER_COUNT", array("#ELEMENT_COUNT#" => '<span id="modef_num">'.(int)($arResult["ELEMENT_COUNT"] ?? 0).'</span>'));?>
-            <span class="arrow"></span>
-            <br/>
-            <a href="<?echo $arResult["FILTER_URL"]?>" target=""><?echo GetMessage("CT_BCSF_FILTER_SHOW")?></a>
-        </div>
+    <input
+        class="submit-btn"
+        type="submit"
+        id="set_filter"
+        name="set_filter"
+        value="<?=GetMessage("CT_BCSF_SET_FILTER")?>"
+    />
+    <input
+        type="submit"
+        id="del_filter"
+        name="del_filter"
+        value="<?=GetMessage("CT_BCSF_DEL_FILTER")?>"
+        style="display:none;"
+    />
+
+    <div class="smart-filter-popup-result <?php if ($arParams["FILTER_VIEW_MODE"] == "VERTICAL") echo $arParams["POPUP_POSITION"]; ?>" id="modef" style="display:none;">
+        <?=GetMessage("CT_BCSF_FILTER_COUNT", array("#ELEMENT_COUNT#" => '<span id="modef_num">'.(int)($arResult["ELEMENT_COUNT"] ?? 0).'</span>'))?>
+        <span class="arrow"></span>
+        <br/>
+        <a href="<?=$arResult["FILTER_URL"]?>" target=""><?=GetMessage("CT_BCSF_FILTER_SHOW")?></a>
     </div>
 </form>
 <script>

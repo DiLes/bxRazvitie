@@ -217,17 +217,10 @@ JCSmartFilter.prototype.postHandler = function (result, fromCache)
 					modef.style.display = 'inline-block';
 				}
 
-				if (this.viewMode === "VERTICAL")
+				if (this.viewMode == "VERTICAL")
 				{
 					curProp = BX.findChild(BX.findParent(this.curFilterinput, {'class':'smart-filter-parameters-box'}), {'class':'smart-filter-container-modef'}, true, false);
-					const modefPosition = BX.Dom.getPosition(modef);
-					if (modefPosition.x < 0)
-					{
-						BX.Dom.removeClass(modef, 'left');
-						BX.Dom.addClass(modef, 'right');
-					}
-
-					BX.Dom.append(modef, curProp);
+					curProp.appendChild(modef);
 				}
 
 				if (result.SEF_SET_FILTER_URL)
@@ -242,7 +235,6 @@ JCSmartFilter.prototype.postHandler = function (result, fromCache)
 	{
 		var set_filter = BX('set_filter');
 		set_filter.disabled = false;
-		set_filter.focus();
 	}
 
 	if (!fromCache && this.cacheKey !== '')
@@ -447,28 +439,6 @@ JCSmartFilter.prototype.selectDropDownItem = function(element, controlId)
 	BX.PopupWindowManager.getCurrentPopup().close();
 };
 
-JCSmartFilter.prototype.toggleViewAll = function(button, groupId)
-{
-	var hiddenItems = document.querySelectorAll('[data-filter-group="' + groupId + '"].hidden-checkbox');
-	var isExpanded = button.classList.contains('expanded');
-
-	if (isExpanded) {
-		// Скрыть элементы
-		hiddenItems.forEach(function(item) {
-			item.style.display = 'none';
-		});
-		button.textContent = 'Показать все';
-		button.classList.remove('expanded');
-	} else {
-		// Показать элементы
-		hiddenItems.forEach(function(item) {
-			item.style.display = '';
-		});
-		button.textContent = 'Скрыть';
-		button.classList.add('expanded');
-	}
-};
-
 BX.namespace("BX.Iblock.SmartFilter");
 BX.Iblock.SmartFilter = (function()
 {
@@ -593,8 +563,6 @@ BX.Iblock.SmartFilter = (function()
 	SmartFilter.prototype.setMinFilteredValue = function (fltMinPrice)
 	{
 		this.fltMinPrice = parseFloat(fltMinPrice);
-		if (!this.colorAvailableActive || !this.colorAvailableInactive) return;
-
 		if (this.fltMinPrice >= this.minPrice)
 		{
 			var priceDiff = this.fltMinPrice - this.minPrice;
@@ -617,8 +585,6 @@ BX.Iblock.SmartFilter = (function()
 	SmartFilter.prototype.setMaxFilteredValue = function (fltMaxPrice)
 	{
 		this.fltMaxPrice = parseFloat(fltMaxPrice);
-		if (!this.colorAvailableActive || !this.colorAvailableInactive) return;
-
 		if (this.fltMaxPrice <= this.maxPrice)
 		{
 			var priceDiff = this.maxPrice - this.fltMaxPrice;

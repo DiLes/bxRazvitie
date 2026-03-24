@@ -785,3 +785,199 @@
 
 	.smart-filter-popup-result .arrow { display: none; }
 }
+
+/* Hidden checkboxes for "Показать все" functionality */
+.hidden-checkbox {
+	display: none;
+}
+
+/* View all button */
+.view-all {
+	display: block;
+	margin-top: 10px;
+	padding: 0;
+	border: none;
+	background: none;
+	color: var(--primary, #1A6EB3);
+	font-size: 14px;
+	font-weight: 400;
+	text-decoration: underline;
+	cursor: pointer;
+	transition: color 0.2s ease;
+}
+
+.view-all:hover {
+	color: #0d4a7a;
+	text-decoration: none;
+}
+
+.view-all.expanded {
+	color: #666;
+}
+
+/* Override accordion styles for compatibility with bx-active class */
+.smart-filter-form .accordion.bx-active .accordion-content {
+	height: auto !important;
+	overflow: visible;
+}
+
+.smart-filter-form .accordion.bx-active .accordion-trigger {
+	margin-bottom: 15px;
+}
+
+.smart-filter-form .accordion.bx-active .accordion-icon {
+	transform: rotate(180deg);
+}
+
+/* Input section styling */
+.smart-filter-form .input-section {
+	display: flex;
+	flex-direction: column;
+	gap: 15px;
+	margin-bottom: 20px;
+}
+
+.smart-filter-form .input-section > span {
+	color: #222;
+	font-size: 18px;
+	font-weight: 700;
+	line-height: 130%;
+	letter-spacing: -0.72px;
+	opacity: 0.8;
+}
+
+.smart-filter-form .input-section .inputs {
+	display: flex;
+	gap: 10px;
+}
+
+.smart-filter-form .input-section .inputs input {
+	flex: 1;
+	padding: 15px 20px;
+	border-radius: 15px;
+	border: 1px solid rgba(26, 26, 26, 0.1);
+	background: #fff;
+	font-size: 14px;
+}
+
+.smart-filter-form .input-section .inputs input::placeholder {
+	color: rgba(26, 26, 26, 0.3);
+}
+
+.smart-filter-form .input-section .inputs input:focus {
+	outline: none;
+	border-color: #056be9;
+}
+
+/* Accordion spacing */
+.smart-filter-form .accordion {
+	margin-bottom: 10px;
+	width: 100%;
+}
+
+.smart-filter-form .accordion .accordion-trigger {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	cursor: pointer;
+	width: 100%;
+	padding: 10px 0;
+	transition: margin 0.3s ease;
+}
+
+.smart-filter-form .accordion .accordion-trigger > span:first-child {
+	color: #222;
+	font-size: 18px;
+	font-weight: 700;
+	line-height: 130%;
+	letter-spacing: -0.72px;
+	opacity: 0.8;
+}
+
+.smart-filter-form .accordion .accordion-content {
+	display: flex;
+	flex-direction: column;
+	gap: 15px;
+	transition: height 0.4s ease, opacity 0.4s ease;
+	overflow: hidden;
+}
+
+/* Custom checkbox styles for filter */
+.smart-filter-form .custom-checkbox {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	cursor: pointer;
+}
+
+.smart-filter-form .custom-checkbox input {
+	display: none;
+}
+
+.smart-filter-form .custom-checkbox .checkmark {
+	width: 24px;
+	height: 24px;
+	border-radius: 5px;
+	border: 1px solid rgba(26, 26, 26, 0.2);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: background 0.2s, border 0.2s;
+	flex-shrink: 0;
+}
+
+.smart-filter-form .custom-checkbox .checkmark svg {
+	display: none;
+}
+
+.smart-filter-form .custom-checkbox input:checked + .checkmark {
+	background: #033b80;
+	border: 1px solid rgba(26, 26, 26, 0.2);
+}
+
+.smart-filter-form .custom-checkbox input:checked + .checkmark svg {
+	display: block;
+}
+
+.smart-filter-form .custom-checkbox .checkbox-text {
+	color: #222;
+	font-size: 12px;
+	font-weight: 700;
+	line-height: 130%;
+	opacity: 0.4;
+	letter-spacing: -0.48px;
+}
+
+.smart-filter-form .custom-checkbox input:checked + .checkmark + .checkbox-text {
+	opacity: 1;
+}
+
+.smart-filter-form .custom-checkbox.disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/* Submit button */
+.smart-filter-form .submit-btn {
+	display: flex;
+	padding: 22px 45px;
+	justify-content: center;
+	align-items: center;
+	gap: 17px;
+	align-self: stretch;
+	width: 100%;
+	border-radius: 18px;
+	background: #056be9;
+	color: #fff;
+	font-size: 14px;
+	font-weight: 700;
+	line-height: 115%;
+	border: none;
+	cursor: pointer;
+	transition: background 0.3s ease;
+	margin-top: 20px;
+}
+
+.smart-filter-form .submit-btn:hover {
+	background: #207ae8;
+}
